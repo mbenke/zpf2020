@@ -29,9 +29,10 @@ export PATH=$(stack path --local-bin):$PATH
 On students, you can try using system GHC:
 
 ~~~~
-export STACK="/home/students/inf/PUBLIC/MRJP/Stack/stack --system-ghc --resolver ghc-8.6"
+export STACK="/home/students/inf/PUBLIC/MRJP/Stack/stack --system-ghc --resolver lts-13.19"
 $STACK setup
-$STACK config set system-ghc true
+$STACK config set system-ghc --global true
+$STACK config set resolver lts-13.19
 $STACK upgrade --force-download  # or cp stack executable to your path
 #  ...
 #  Should I try to perform the file copy using sudo? This may fail
