@@ -722,6 +722,7 @@ distinct.
 <a class="sourceLine" id="cb42-5" title="5"><span class="kw">instance</span> <span class="dt">Collection</span> [a] <span class="kw">where</span></a>
 <a class="sourceLine" id="cb42-6" title="6">     insert <span class="ot">=</span> (<span class="op">:</span>)</a>
 <a class="sourceLine" id="cb42-7" title="7">     member <span class="ot">=</span> <span class="fu">elem</span></a></code></pre></div>
+<p>we get an error:</p>
 <pre><code>    Couldn&#39;t match type `e&#39; with `a&#39;
       `e&#39; is a rigid type variable bound by
           the type signature for member :: e -&gt; [a] -&gt; Bool
@@ -748,7 +749,7 @@ distinct.
 <a class="sourceLine" id="cb46-3" title="3">   member <span class="ot">=</span> <span class="fu">undefined</span></a></code></pre></div>
 <pre><code>-- (:) :: forall t. t -&gt; [t] -&gt; [t]
 ColList :: forall a. ColDic a
-ColList = \@ a -&gt; CD { insert = (:) @ a, member =</code></pre>
+ColList = \@ a -&gt; CD { insert = (:) @ a, member = undefined }</code></pre>
 </div>
 <div id="problem-with-muliparameter-type-classes-2" class="slide section level1">
 <h1>Problem with muliparameter type classes</h1>
@@ -782,7 +783,6 @@ ColList = \@ a -&gt; CD { insert = (:) @ a, member =</code></pre>
 <a class="sourceLine" id="cb48-24" title="24"><span class="ot">problem3 ::</span> (<span class="dt">Collection</span> c0 <span class="dt">Char</span>, <span class="dt">Collection</span> c0 <span class="dt">Bool</span>) <span class="ot">=&gt;</span> c0 <span class="ot">-&gt;</span> c0</a>
 <a class="sourceLine" id="cb48-25" title="25">problem3 <span class="ot">=</span> ins2 <span class="dt">True</span> <span class="ch">&#39;a&#39;</span></a>
 <a class="sourceLine" id="cb48-26" title="26"><span class="co">-- Here the problem is that this is type correct, but shouldn&#39;t</span></a></code></pre></div>
-<p>Exercise: verify that <code>Collects</code> solves the problem we had with <code>Collection</code></p>
 </div>
 <div id="functional-dependencies" class="slide section level1">
 <h1>Functional dependencies</h1>
@@ -793,6 +793,7 @@ ColList = \@ a -&gt; CD { insert = (:) @ a, member =</code></pre>
 <a class="sourceLine" id="cb49-4" title="4"><span class="ot">      empty  ::</span> ce</a>
 <a class="sourceLine" id="cb49-5" title="5"><span class="ot">      insert ::</span> e <span class="ot">-&gt;</span> ce <span class="ot">-&gt;</span> ce</a>
 <a class="sourceLine" id="cb49-6" title="6"><span class="ot">      member ::</span> e <span class="ot">-&gt;</span> ce <span class="ot">-&gt;</span> <span class="dt">Bool</span></a></code></pre></div>
+<p>Exercise: verify that <code>Collects</code> solves the problem we had with <code>Collection</code></p>
 <p>Problem: <em>Fundeps are very, very tricky.</em> - SPJ</p>
 <p>More: http://research.microsoft.com/en-us/um/people/simonpj/papers/fd-chr/</p>
 </div>

@@ -774,6 +774,8 @@ instance Collection [a] where
      member = elem
 ~~~~
 
+we get an error:
+
 ~~~~
     Couldn't match type `e' with `a'
       `e' is a rigid type variable bound by
@@ -815,7 +817,7 @@ instance Collection [a] where
 ~~~~
 -- (:) :: forall t. t -> [t] -> [t]
 ColList :: forall a. ColDic a
-ColList = \@ a -> CD { insert = (:) @ a, member =
+ColList = \@ a -> CD { insert = (:) @ a, member = undefined }
 ~~~~
 
 # Problem with muliparameter type classes
@@ -855,7 +857,6 @@ problem3 = ins2 True 'a'
 -- Here the problem is that this is type correct, but shouldn't
 ~~~~
 
-Exercise: verify that `Collects` solves the problem we had with `Collection`
 
 # Functional dependencies
 Sometimes in multiparameter typeclasses, one parameter determines another, e.g.
@@ -868,6 +869,9 @@ Sometimes in multiparameter typeclasses, one parameter determines another, e.g.
       insert :: e -> ce -> ce
       member :: e -> ce -> Bool
 ~~~~
+
+Exercise: verify that `Collects` solves the problem we had with `Collection`
+
 
 Problem: *Fundeps are very, very tricky.* - SPJ
 
