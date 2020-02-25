@@ -41,3 +41,8 @@ $STACK upgrade --force-download  # or cp stack executable to your path
 export PATH=$($STACK path --local-bin):$PATH
 $STACK install pandoc
 ~~~~
+
+On lab workstations use `lts-12.26` instead.
+
+Installing `pandoc` is optional, there are prebuilt HTML files in the `www` folder (or you can just read markdown).
+
