@@ -14,6 +14,8 @@
     * ` stack config set resolver lts-13.19`
     * Rest as above
 
+On lab workstations use the `lts-12.26` resolver instead.
+
 # Types as a programming language
 
 * Functions on types computed at compile time
