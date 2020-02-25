@@ -1,7 +1,7 @@
 ---
 title: Advanced Functional Programming
 author:  Marcin Benke
-date: Feb 24, 2020
+date: Feb 25, 2020
 ---
 
 <meta name="duration" content="80" />
@@ -174,16 +174,13 @@ someFunc
 
 1.  On your own machine:
     * Install `stack`
-    * Install GHC 7.10 przy pomocy `stack setup`
-    * Install GHC 8 przy pomocy `stack setup`
+    * Install GHC 7.10 using `stack setup`
+    * Install GHC 8.6 using `stack setup`
     * Run `stack ghci` with ver 7.10 and 8
     * Build and run hello project, modify it a little
 
-2. On students
-    * You can try the same, but quota problem possible
-    * `stack setup` withu GHC 8.2 (and maybe 7.10) from PUBLIC
-    * `stack config set system-ghc --global true`
-    * Rest as above
+2. On students you can try the same, but quota can be a problem, so use system ghc instead.
+
 
 # Functional languages
 * dynamically typed, strict, impure: e.g. Lisp
@@ -278,6 +275,35 @@ The type of `runST` guarantees that side effects do not leak;
     ~~~~
 
 Newer Haskell version allow for typed holes.
+
+```
+module Conquer where
+
+data Foo = Foo
+data Bar = Bar Foo
+
+conquer :: [Foo] -> [Bar]
+conquer fs = concatMap (pure . step) fs
+
+step :: Foo -> Bar
+step = _
+```
+
+we get 
+
+```
+    • Found hole: _ :: Foo -> Bar
+    • In the expression: _
+      In an equation for ‘step’: step = _
+    • Relevant bindings include
+        step :: Foo -> Bar
+      Valid substitutions include
+        Bar :: Foo -> Bar
+        step :: Foo -> Bar
+        undefined :: forall (a :: TYPE r).
+                     GHC.Stack.Types.HasCallStack =>
+                     a
+```
 
 # Types as a programming language
 
