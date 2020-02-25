@@ -289,7 +289,7 @@ step :: Foo -> Bar
 step = _
 ```
 
-we get 
+we get
 
 ```
     • Found hole: _ :: Foo -> Bar
@@ -742,17 +742,19 @@ furthermore, T must not be a type synonym, and the ui must all be
 distinct.
 -->
 
-* an instance head must have the form C (T u1 ... uk), where T is a type constructor defined by a data or newtype declaration  and the ui are distinct type variables, and
+* an instance head must have the form `C (T u1 ... uk)`, where `T` is a type constructor defined by a data or newtype declaration  and the `u_i` are distinct type variables
 
 <!--
-*    each assertion in the context must have the form C' v, where v is one of the ui.
+*    and each assertion in the context must have the form C' v, where v is one of the ui.
 -->
 
 This prohibits instance declarations such as:
 
+```
   instance C (a,a) where ...
   instance C (Int,a) where ...
   instance C [[a]] where ...
+```
 
 `instance Iso a a` does not meet these conditions, but it's easy to see  what relation we mean.
 

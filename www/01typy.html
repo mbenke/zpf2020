@@ -84,7 +84,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <header id="title-block-header">
 <h1 class="title">Advanced Functional Programming</h1>
 <p class="author">Marcin Benke</p>
-<p class="date">Feb 24, 2020</p>
+<p class="date">Feb 25, 2020</p>
 </header>
 <meta name="duration" content="80" />
 <h1 id="course-plan">Course plan</h1>
@@ -231,18 +231,12 @@ someFunc</code></pre>
 <li>On your own machine:
 <ul>
 <li>Install <code>stack</code></li>
-<li>Install GHC 7.10 przy pomocy <code>stack setup</code></li>
-<li>Install GHC 8 przy pomocy <code>stack setup</code></li>
+<li>Install GHC 7.10 using <code>stack setup</code></li>
+<li>Install GHC 8.6 using <code>stack setup</code></li>
 <li>Run <code>stack ghci</code> with ver 7.10 and 8</li>
 <li>Build and run hello project, modify it a little</li>
 </ul></li>
-<li>On students
-<ul>
-<li>You can try the same, but quota problem possible</li>
-<li><code>stack setup</code> withu GHC 8.2 (and maybe 7.10) from PUBLIC</li>
-<li><code>stack config set system-ghc --global true</code></li>
-<li>Rest as above</li>
-</ul></li>
+<li>On students you can try the same, but quota can be a problem, so use system ghc instead.</li>
 </ol>
 <h1 id="functional-languages">Functional languages</h1>
 <ul>
@@ -307,59 +301,81 @@ someFunc</code></pre>
 <a class="sourceLine" id="cb13-5" title="5">step <span class="ot">=</span> <span class="fu">undefined</span></a></code></pre></div></li>
 </ul>
 <p>Newer Haskell version allow for typed holes.</p>
+<pre><code>module Conquer where
+
+data Foo = Foo
+data Bar = Bar Foo
+
+conquer :: [Foo] -&gt; [Bar]
+conquer fs = concatMap (pure . step) fs
+
+step :: Foo -&gt; Bar
+step = _</code></pre>
+<p>we get</p>
+<pre><code>    • Found hole: _ :: Foo -&gt; Bar
+    • In the expression: _
+      In an equation for ‘step’: step = _
+    • Relevant bindings include
+        step :: Foo -&gt; Bar
+      Valid substitutions include
+        Bar :: Foo -&gt; Bar
+        step :: Foo -&gt; Bar
+        undefined :: forall (a :: TYPE r).
+                     GHC.Stack.Types.HasCallStack =&gt;
+                     a</code></pre>
 <h1 id="types-as-a-programming-language">Types as a programming language</h1>
 <ul>
 <li><p>Functions on types computed at compile time</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb14-1" title="1"><span class="kw">data</span> <span class="dt">Zero</span></a>
-<a class="sourceLine" id="cb14-2" title="2"><span class="kw">data</span> <span class="dt">Succ</span> n</a>
-<a class="sourceLine" id="cb14-3" title="3"></a>
-<a class="sourceLine" id="cb14-4" title="4"><span class="kw">type</span> <span class="dt">One</span>   <span class="ot">=</span> <span class="dt">Succ</span> <span class="dt">Zero</span></a>
-<a class="sourceLine" id="cb14-5" title="5"><span class="kw">type</span> <span class="dt">Two</span>   <span class="ot">=</span> <span class="dt">Succ</span> <span class="dt">One</span></a>
-<a class="sourceLine" id="cb14-6" title="6"><span class="kw">type</span> <span class="dt">Three</span> <span class="ot">=</span> <span class="dt">Succ</span> <span class="dt">Two</span></a>
-<a class="sourceLine" id="cb14-7" title="7"><span class="kw">type</span> <span class="dt">Four</span>  <span class="ot">=</span> <span class="dt">Succ</span> <span class="dt">Three</span></a>
-<a class="sourceLine" id="cb14-8" title="8"></a>
-<a class="sourceLine" id="cb14-9" title="9">one   <span class="ot">= undefined ::</span> <span class="dt">One</span></a>
-<a class="sourceLine" id="cb14-10" title="10">two   <span class="ot">= undefined ::</span> <span class="dt">Two</span></a>
-<a class="sourceLine" id="cb14-11" title="11">three <span class="ot">= undefined ::</span> <span class="dt">Three</span></a>
-<a class="sourceLine" id="cb14-12" title="12">four  <span class="ot">= undefined ::</span> <span class="dt">Four</span></a>
-<a class="sourceLine" id="cb14-13" title="13"></a>
-<a class="sourceLine" id="cb14-14" title="14"><span class="kw">class</span> <span class="dt">Add</span> a b c <span class="op">|</span> a b <span class="ot">-&gt;</span> c <span class="kw">where</span></a>
-<a class="sourceLine" id="cb14-15" title="15"><span class="ot">  add ::</span> a <span class="ot">-&gt;</span> b <span class="ot">-&gt;</span> c</a>
-<a class="sourceLine" id="cb14-16" title="16">  add <span class="ot">=</span> <span class="fu">undefined</span></a>
-<a class="sourceLine" id="cb14-17" title="17"><span class="kw">instance</span>              <span class="dt">Add</span>  <span class="dt">Zero</span>    b  b</a>
-<a class="sourceLine" id="cb14-18" title="18"><span class="kw">instance</span> <span class="dt">Add</span> a b c <span class="ot">=&gt;</span> <span class="dt">Add</span> (<span class="dt">Succ</span> a) b (<span class="dt">Succ</span> c)</a></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb16-1" title="1"><span class="kw">data</span> <span class="dt">Zero</span></a>
+<a class="sourceLine" id="cb16-2" title="2"><span class="kw">data</span> <span class="dt">Succ</span> n</a>
+<a class="sourceLine" id="cb16-3" title="3"></a>
+<a class="sourceLine" id="cb16-4" title="4"><span class="kw">type</span> <span class="dt">One</span>   <span class="ot">=</span> <span class="dt">Succ</span> <span class="dt">Zero</span></a>
+<a class="sourceLine" id="cb16-5" title="5"><span class="kw">type</span> <span class="dt">Two</span>   <span class="ot">=</span> <span class="dt">Succ</span> <span class="dt">One</span></a>
+<a class="sourceLine" id="cb16-6" title="6"><span class="kw">type</span> <span class="dt">Three</span> <span class="ot">=</span> <span class="dt">Succ</span> <span class="dt">Two</span></a>
+<a class="sourceLine" id="cb16-7" title="7"><span class="kw">type</span> <span class="dt">Four</span>  <span class="ot">=</span> <span class="dt">Succ</span> <span class="dt">Three</span></a>
+<a class="sourceLine" id="cb16-8" title="8"></a>
+<a class="sourceLine" id="cb16-9" title="9">one   <span class="ot">= undefined ::</span> <span class="dt">One</span></a>
+<a class="sourceLine" id="cb16-10" title="10">two   <span class="ot">= undefined ::</span> <span class="dt">Two</span></a>
+<a class="sourceLine" id="cb16-11" title="11">three <span class="ot">= undefined ::</span> <span class="dt">Three</span></a>
+<a class="sourceLine" id="cb16-12" title="12">four  <span class="ot">= undefined ::</span> <span class="dt">Four</span></a>
+<a class="sourceLine" id="cb16-13" title="13"></a>
+<a class="sourceLine" id="cb16-14" title="14"><span class="kw">class</span> <span class="dt">Add</span> a b c <span class="op">|</span> a b <span class="ot">-&gt;</span> c <span class="kw">where</span></a>
+<a class="sourceLine" id="cb16-15" title="15"><span class="ot">  add ::</span> a <span class="ot">-&gt;</span> b <span class="ot">-&gt;</span> c</a>
+<a class="sourceLine" id="cb16-16" title="16">  add <span class="ot">=</span> <span class="fu">undefined</span></a>
+<a class="sourceLine" id="cb16-17" title="17"><span class="kw">instance</span>              <span class="dt">Add</span>  <span class="dt">Zero</span>    b  b</a>
+<a class="sourceLine" id="cb16-18" title="18"><span class="kw">instance</span> <span class="dt">Add</span> a b c <span class="ot">=&gt;</span> <span class="dt">Add</span> (<span class="dt">Succ</span> a) b (<span class="dt">Succ</span> c)</a></code></pre></div>
 <pre><code>*Main&gt; :t add three one
 add three one :: Succ (Succ (Succ (Succ Zero)))</code></pre></li>
 </ul>
 <p><strong>Exercise:</strong> extend with multiplication and factorial</p>
 <h1 id="types-as-a-programming-language-2">Types as a programming language (2)</h1>
 <p>Vectors using type classes:</p>
-<div class="sourceCode" id="cb16"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb16-1" title="1"><span class="kw">data</span> <span class="dt">Vec</span><span class="ot"> ::</span> <span class="op">*</span> <span class="ot">-&gt;</span> <span class="op">*</span> <span class="ot">-&gt;</span> <span class="op">*</span> <span class="kw">where</span></a>
-<a class="sourceLine" id="cb16-2" title="2">  <span class="dt">VNil</span><span class="ot"> ::</span> <span class="dt">Vec</span> <span class="dt">Zero</span> a</a>
-<a class="sourceLine" id="cb16-3" title="3"><span class="ot">  (:&gt;) ::</span> a <span class="ot">-&gt;</span> <span class="dt">Vec</span> n a <span class="ot">-&gt;</span> <span class="dt">Vec</span> (<span class="dt">Succ</span> n) a</a>
-<a class="sourceLine" id="cb16-4" title="4"></a>
-<a class="sourceLine" id="cb16-5" title="5"><span class="ot">vhead ::</span> <span class="dt">Vec</span> (<span class="dt">Succ</span> n) a <span class="ot">-&gt;</span> a</a>
-<a class="sourceLine" id="cb16-6" title="6">vhead (x <span class="op">:&gt;</span> xs) <span class="ot">=</span> x</a></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb18-1" title="1"><span class="kw">data</span> <span class="dt">Vec</span><span class="ot"> ::</span> <span class="op">*</span> <span class="ot">-&gt;</span> <span class="op">*</span> <span class="ot">-&gt;</span> <span class="op">*</span> <span class="kw">where</span></a>
+<a class="sourceLine" id="cb18-2" title="2">  <span class="dt">VNil</span><span class="ot"> ::</span> <span class="dt">Vec</span> <span class="dt">Zero</span> a</a>
+<a class="sourceLine" id="cb18-3" title="3"><span class="ot">  (:&gt;) ::</span> a <span class="ot">-&gt;</span> <span class="dt">Vec</span> n a <span class="ot">-&gt;</span> <span class="dt">Vec</span> (<span class="dt">Succ</span> n) a</a>
+<a class="sourceLine" id="cb18-4" title="4"></a>
+<a class="sourceLine" id="cb18-5" title="5"><span class="ot">vhead ::</span> <span class="dt">Vec</span> (<span class="dt">Succ</span> n) a <span class="ot">-&gt;</span> a</a>
+<a class="sourceLine" id="cb18-6" title="6">vhead (x <span class="op">:&gt;</span> xs) <span class="ot">=</span> x</a></code></pre></div>
 <p><strong>Exercise:</strong> write <code>vtail</code>, <code>vlast</code></p>
 <p>We would like to have</p>
-<div class="sourceCode" id="cb17"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb17-1" title="1"><span class="ot">vappend ::</span> <span class="dt">Add</span> m n s <span class="ot">=&gt;</span> <span class="dt">Vec</span> m a <span class="ot">-&gt;</span> <span class="dt">Vec</span> n a <span class="ot">-&gt;</span> <span class="dt">Vec</span> s a</a></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb19-1" title="1"><span class="ot">vappend ::</span> <span class="dt">Add</span> m n s <span class="ot">=&gt;</span> <span class="dt">Vec</span> m a <span class="ot">-&gt;</span> <span class="dt">Vec</span> n a <span class="ot">-&gt;</span> <span class="dt">Vec</span> s a</a></code></pre></div>
 <p>but here the base type system is too weak</p>
 <h1 id="types-as-a-programming-language-3">Types as a programming language (3)</h1>
 <ul>
 <li><p>Vectors with type families:</p>
-<div class="sourceCode" id="cb18"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb18-1" title="1"><span class="kw">data</span> <span class="dt">Zero</span> <span class="ot">=</span> <span class="dt">Zero</span></a>
-<a class="sourceLine" id="cb18-2" title="2"><span class="kw">data</span> <span class="dt">Suc</span> n <span class="ot">=</span> <span class="dt">Suc</span> n</a>
-<a class="sourceLine" id="cb18-3" title="3"></a>
-<a class="sourceLine" id="cb18-4" title="4"><span class="kw">type</span> <span class="kw">family</span> m <span class="op">:+</span> n</a>
-<a class="sourceLine" id="cb18-5" title="5"><span class="kw">type</span> <span class="kw">instance</span> <span class="dt">Zero</span> <span class="op">:+</span> n <span class="ot">=</span> n</a>
-<a class="sourceLine" id="cb18-6" title="6"><span class="kw">type</span> <span class="kw">instance</span> (<span class="dt">Suc</span> m) <span class="op">:+</span> n <span class="ot">=</span> <span class="dt">Suc</span>(m<span class="op">:+</span>n)</a>
-<a class="sourceLine" id="cb18-7" title="7"></a>
-<a class="sourceLine" id="cb18-8" title="8"><span class="kw">data</span> <span class="dt">Vec</span><span class="ot"> ::</span> <span class="op">*</span> <span class="ot">-&gt;</span> <span class="op">*</span> <span class="ot">-&gt;</span> <span class="op">*</span> <span class="kw">where</span></a>
-<a class="sourceLine" id="cb18-9" title="9">  <span class="dt">VNil</span><span class="ot"> ::</span> <span class="dt">Vec</span> <span class="dt">Zero</span> a</a>
-<a class="sourceLine" id="cb18-10" title="10"><span class="ot">  (:&gt;) ::</span> a <span class="ot">-&gt;</span> <span class="dt">Vec</span> n a <span class="ot">-&gt;</span> <span class="dt">Vec</span> (<span class="dt">Suc</span> n) a</a>
-<a class="sourceLine" id="cb18-11" title="11"></a>
-<a class="sourceLine" id="cb18-12" title="12"><span class="ot">vhead ::</span> <span class="dt">Vec</span> (<span class="dt">Suc</span> n) a <span class="ot">-&gt;</span> a</a>
-<a class="sourceLine" id="cb18-13" title="13"><span class="ot">vappend ::</span> <span class="dt">Vec</span> m a <span class="ot">-&gt;</span> <span class="dt">Vec</span> n a <span class="ot">-&gt;</span> <span class="dt">Vec</span> (m<span class="op">:+</span>n) a</a></code></pre></div></li>
+<div class="sourceCode" id="cb20"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb20-1" title="1"><span class="kw">data</span> <span class="dt">Zero</span> <span class="ot">=</span> <span class="dt">Zero</span></a>
+<a class="sourceLine" id="cb20-2" title="2"><span class="kw">data</span> <span class="dt">Suc</span> n <span class="ot">=</span> <span class="dt">Suc</span> n</a>
+<a class="sourceLine" id="cb20-3" title="3"></a>
+<a class="sourceLine" id="cb20-4" title="4"><span class="kw">type</span> <span class="kw">family</span> m <span class="op">:+</span> n</a>
+<a class="sourceLine" id="cb20-5" title="5"><span class="kw">type</span> <span class="kw">instance</span> <span class="dt">Zero</span> <span class="op">:+</span> n <span class="ot">=</span> n</a>
+<a class="sourceLine" id="cb20-6" title="6"><span class="kw">type</span> <span class="kw">instance</span> (<span class="dt">Suc</span> m) <span class="op">:+</span> n <span class="ot">=</span> <span class="dt">Suc</span>(m<span class="op">:+</span>n)</a>
+<a class="sourceLine" id="cb20-7" title="7"></a>
+<a class="sourceLine" id="cb20-8" title="8"><span class="kw">data</span> <span class="dt">Vec</span><span class="ot"> ::</span> <span class="op">*</span> <span class="ot">-&gt;</span> <span class="op">*</span> <span class="ot">-&gt;</span> <span class="op">*</span> <span class="kw">where</span></a>
+<a class="sourceLine" id="cb20-9" title="9">  <span class="dt">VNil</span><span class="ot"> ::</span> <span class="dt">Vec</span> <span class="dt">Zero</span> a</a>
+<a class="sourceLine" id="cb20-10" title="10"><span class="ot">  (:&gt;) ::</span> a <span class="ot">-&gt;</span> <span class="dt">Vec</span> n a <span class="ot">-&gt;</span> <span class="dt">Vec</span> (<span class="dt">Suc</span> n) a</a>
+<a class="sourceLine" id="cb20-11" title="11"></a>
+<a class="sourceLine" id="cb20-12" title="12"><span class="ot">vhead ::</span> <span class="dt">Vec</span> (<span class="dt">Suc</span> n) a <span class="ot">-&gt;</span> a</a>
+<a class="sourceLine" id="cb20-13" title="13"><span class="ot">vappend ::</span> <span class="dt">Vec</span> m a <span class="ot">-&gt;</span> <span class="dt">Vec</span> n a <span class="ot">-&gt;</span> <span class="dt">Vec</span> (m<span class="op">:+</span>n) a</a></code></pre></div></li>
 </ul>
 <h1 id="dependent-types">Dependent types</h1>
 <p>Real type-level programming and proving properties is possible in a language with dependent types, such as Agda or Idris:</p>
@@ -399,19 +415,19 @@ module UsingVectorEquality {s₁ s₂} (S : Setoid s₁ s₂) where
 <p>…even though writing such proofs is fun.</p>
 <h1 id="parallel-haskell">Parallel Haskell</h1>
 <p>Parallel Sudoku solver</p>
-<div class="sourceCode" id="cb21"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb21-1" title="1">main <span class="ot">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb21-2" title="2">    [f] <span class="ot">&lt;-</span> getArgs</a>
-<a class="sourceLine" id="cb21-3" title="3">    grids <span class="ot">&lt;-</span> <span class="fu">fmap</span> <span class="fu">lines</span> <span class="op">$</span> <span class="fu">readFile</span> f</a>
-<a class="sourceLine" id="cb21-4" title="4">    runEval (parMap solve grids) <span class="ot">`deepseq`</span> <span class="fu">return</span> ()</a>
-<a class="sourceLine" id="cb21-5" title="5"></a>
-<a class="sourceLine" id="cb21-6" title="6"><span class="ot">parMap ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> <span class="dt">Eval</span> [b]</a>
-<a class="sourceLine" id="cb21-7" title="7">parMap f [] <span class="ot">=</span> <span class="fu">return</span> []</a>
-<a class="sourceLine" id="cb21-8" title="8">parMap f (a<span class="op">:</span>as) <span class="ot">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb21-9" title="9">   b <span class="ot">&lt;-</span> rpar (f a)</a>
-<a class="sourceLine" id="cb21-10" title="10">   bs <span class="ot">&lt;-</span> parMap f as</a>
-<a class="sourceLine" id="cb21-11" title="11">   <span class="fu">return</span> (b<span class="op">:</span>bs)</a>
-<a class="sourceLine" id="cb21-12" title="12"></a>
-<a class="sourceLine" id="cb21-13" title="13"><span class="ot">solve ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Grid</span></a></code></pre></div>
+<div class="sourceCode" id="cb23"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb23-1" title="1">main <span class="ot">=</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb23-2" title="2">    [f] <span class="ot">&lt;-</span> getArgs</a>
+<a class="sourceLine" id="cb23-3" title="3">    grids <span class="ot">&lt;-</span> <span class="fu">fmap</span> <span class="fu">lines</span> <span class="op">$</span> <span class="fu">readFile</span> f</a>
+<a class="sourceLine" id="cb23-4" title="4">    runEval (parMap solve grids) <span class="ot">`deepseq`</span> <span class="fu">return</span> ()</a>
+<a class="sourceLine" id="cb23-5" title="5"></a>
+<a class="sourceLine" id="cb23-6" title="6"><span class="ot">parMap ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> <span class="dt">Eval</span> [b]</a>
+<a class="sourceLine" id="cb23-7" title="7">parMap f [] <span class="ot">=</span> <span class="fu">return</span> []</a>
+<a class="sourceLine" id="cb23-8" title="8">parMap f (a<span class="op">:</span>as) <span class="ot">=</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb23-9" title="9">   b <span class="ot">&lt;-</span> rpar (f a)</a>
+<a class="sourceLine" id="cb23-10" title="10">   bs <span class="ot">&lt;-</span> parMap f as</a>
+<a class="sourceLine" id="cb23-11" title="11">   <span class="fu">return</span> (b<span class="op">:</span>bs)</a>
+<a class="sourceLine" id="cb23-12" title="12"></a>
+<a class="sourceLine" id="cb23-13" title="13"><span class="ot">solve ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Grid</span></a></code></pre></div>
 <pre><code>$ ./sudoku3b sudoku17.1000.txt +RTS -N2 -s -RTS
   TASKS: 4 (1 bound, 3 peak workers (3 total), using -N2)
   SPARKS: 1000 (1000 converted, 0 overflowed, 0 dud, 0 GC&#39;d, 0 fizzled)
@@ -423,17 +439,17 @@ module UsingVectorEquality {s₁ s₂} (S : Setoid s₁ s₂) where
 N16: Productivity  62.8% of total user, 833.8% of total elapsed
 N32: Productivity  43.5% of total user, 1112.6% of total elapsed</code></pre>
 <h1 id="parallel-fibonacci">Parallel Fibonacci</h1>
-<div class="sourceCode" id="cb23"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb23-1" title="1"><span class="ot">cutoff ::</span> <span class="dt">Int</span></a>
-<a class="sourceLine" id="cb23-2" title="2">cutoff <span class="ot">=</span> <span class="dv">20</span></a>
-<a class="sourceLine" id="cb23-3" title="3"></a>
-<a class="sourceLine" id="cb23-4" title="4">parFib n <span class="op">|</span> n <span class="op">&lt;</span> cutoff <span class="ot">=</span> fib n</a>
-<a class="sourceLine" id="cb23-5" title="5">parFib n <span class="ot">=</span> p <span class="ot">`par`</span> q <span class="ot">`pseq`</span> (p <span class="op">+</span> q)</a>
-<a class="sourceLine" id="cb23-6" title="6">    <span class="kw">where</span></a>
-<a class="sourceLine" id="cb23-7" title="7">      p <span class="ot">=</span> parFib <span class="op">$</span> n <span class="op">-</span> <span class="dv">1</span></a>
-<a class="sourceLine" id="cb23-8" title="8">      q <span class="ot">=</span> parFib <span class="op">$</span> n <span class="op">-</span> <span class="dv">2</span></a>
-<a class="sourceLine" id="cb23-9" title="9"></a>
-<a class="sourceLine" id="cb23-10" title="10">fib n <span class="op">|</span> n<span class="op">&lt;</span><span class="dv">2</span> <span class="ot">=</span> n</a>
-<a class="sourceLine" id="cb23-11" title="11">fib n <span class="ot">=</span> fib (n <span class="op">-</span> <span class="dv">1</span>) <span class="op">+</span> fib (n <span class="op">-</span> <span class="dv">2</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb25"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb25-1" title="1"><span class="ot">cutoff ::</span> <span class="dt">Int</span></a>
+<a class="sourceLine" id="cb25-2" title="2">cutoff <span class="ot">=</span> <span class="dv">20</span></a>
+<a class="sourceLine" id="cb25-3" title="3"></a>
+<a class="sourceLine" id="cb25-4" title="4">parFib n <span class="op">|</span> n <span class="op">&lt;</span> cutoff <span class="ot">=</span> fib n</a>
+<a class="sourceLine" id="cb25-5" title="5">parFib n <span class="ot">=</span> p <span class="ot">`par`</span> q <span class="ot">`pseq`</span> (p <span class="op">+</span> q)</a>
+<a class="sourceLine" id="cb25-6" title="6">    <span class="kw">where</span></a>
+<a class="sourceLine" id="cb25-7" title="7">      p <span class="ot">=</span> parFib <span class="op">$</span> n <span class="op">-</span> <span class="dv">1</span></a>
+<a class="sourceLine" id="cb25-8" title="8">      q <span class="ot">=</span> parFib <span class="op">$</span> n <span class="op">-</span> <span class="dv">2</span></a>
+<a class="sourceLine" id="cb25-9" title="9"></a>
+<a class="sourceLine" id="cb25-10" title="10">fib n <span class="op">|</span> n<span class="op">&lt;</span><span class="dv">2</span> <span class="ot">=</span> n</a>
+<a class="sourceLine" id="cb25-11" title="11">fib n <span class="ot">=</span> fib (n <span class="op">-</span> <span class="dv">1</span>) <span class="op">+</span> fib (n <span class="op">-</span> <span class="dv">2</span>)</a></code></pre></div>
 <pre><code>./parfib +RTS -N60 -s -RTS
  SPARKS: 118393 (42619 converted, 0 overflowed, 0 dud,
                  11241 GC&#39;d, 64533 fizzled)
@@ -447,35 +463,35 @@ N32: Productivity  43.5% of total user, 1112.6% of total elapsed</code></pre>
   Total   time   13.59s  (  0.28s elapsed)
   Productivity  97.6% of total user, 4746.9% of total elapsed</code></pre>
 <h1 id="data-parallel-haskell">Data Parallel Haskell</h1>
-<div class="sourceCode" id="cb25"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb25-1" title="1"><span class="ot">{-# LANGUAGE ParallelArrays #-}</span></a>
-<a class="sourceLine" id="cb25-2" title="2"><span class="ot">{-# OPTIONS_GHC -fvectorise #-}</span></a>
-<a class="sourceLine" id="cb25-3" title="3"></a>
-<a class="sourceLine" id="cb25-4" title="4"><span class="kw">module</span> <span class="dt">DotP</span> <span class="kw">where</span></a>
-<a class="sourceLine" id="cb25-5" title="5"><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Prelude</span></a>
-<a class="sourceLine" id="cb25-6" title="6"><span class="kw">import</span> <span class="dt">Data.Array.Parallel</span></a>
-<a class="sourceLine" id="cb25-7" title="7"><span class="kw">import</span> <span class="dt">Data.Array.Parallel.Prelude</span></a>
-<a class="sourceLine" id="cb25-8" title="8"><span class="kw">import</span> <span class="dt">Data.Array.Parallel.Prelude.Double</span> <span class="kw">as</span> <span class="dt">D</span></a>
-<a class="sourceLine" id="cb25-9" title="9"></a>
-<a class="sourceLine" id="cb25-10" title="10"><span class="ot">dotp_double ::</span> [<span class="op">:</span><span class="dt">Double</span><span class="op">:</span>] <span class="ot">-&gt;</span> [<span class="op">:</span><span class="dt">Double</span><span class="op">:</span>] <span class="ot">-&gt;</span> <span class="dt">Double</span></a>
-<a class="sourceLine" id="cb25-11" title="11">dotp_double xs ys <span class="ot">=</span> D.sumP [<span class="op">:</span>x <span class="op">*</span> y <span class="op">|</span> x <span class="ot">&lt;-</span> xs <span class="op">|</span> y <span class="ot">&lt;-</span> ys<span class="op">:</span>]</a></code></pre></div>
+<div class="sourceCode" id="cb27"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb27-1" title="1"><span class="ot">{-# LANGUAGE ParallelArrays #-}</span></a>
+<a class="sourceLine" id="cb27-2" title="2"><span class="ot">{-# OPTIONS_GHC -fvectorise #-}</span></a>
+<a class="sourceLine" id="cb27-3" title="3"></a>
+<a class="sourceLine" id="cb27-4" title="4"><span class="kw">module</span> <span class="dt">DotP</span> <span class="kw">where</span></a>
+<a class="sourceLine" id="cb27-5" title="5"><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Prelude</span></a>
+<a class="sourceLine" id="cb27-6" title="6"><span class="kw">import</span> <span class="dt">Data.Array.Parallel</span></a>
+<a class="sourceLine" id="cb27-7" title="7"><span class="kw">import</span> <span class="dt">Data.Array.Parallel.Prelude</span></a>
+<a class="sourceLine" id="cb27-8" title="8"><span class="kw">import</span> <span class="dt">Data.Array.Parallel.Prelude.Double</span> <span class="kw">as</span> <span class="dt">D</span></a>
+<a class="sourceLine" id="cb27-9" title="9"></a>
+<a class="sourceLine" id="cb27-10" title="10"><span class="ot">dotp_double ::</span> [<span class="op">:</span><span class="dt">Double</span><span class="op">:</span>] <span class="ot">-&gt;</span> [<span class="op">:</span><span class="dt">Double</span><span class="op">:</span>] <span class="ot">-&gt;</span> <span class="dt">Double</span></a>
+<a class="sourceLine" id="cb27-11" title="11">dotp_double xs ys <span class="ot">=</span> D.sumP [<span class="op">:</span>x <span class="op">*</span> y <span class="op">|</span> x <span class="ot">&lt;-</span> xs <span class="op">|</span> y <span class="ot">&lt;-</span> ys<span class="op">:</span>]</a></code></pre></div>
 <p>Looks like list operations, but works on vectors and “automagically” parallellises to any number of cores (also CUDA)</p>
 <h1 id="types-in-haskell">Types in Haskell</h1>
 <ul>
 <li><p>base types: <code>zeroInt :: Int</code></p></li>
 <li><p>function types: <code>plusInt :: Int -&gt; Int -&gt; Int</code></p></li>
 <li><p>polymorphic types <code>id :: a -&gt; a</code></p>
-<div class="sourceCode" id="cb26"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb26-1" title="1"><span class="ot">{-# LANGUAGE ExplicitForAll #-}</span></a>
-<a class="sourceLine" id="cb26-2" title="2"><span class="ot">g ::</span> <span class="kw">forall</span> b<span class="op">.</span>b <span class="ot">-&gt;</span> b</a></code></pre></div></li>
+<div class="sourceCode" id="cb28"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb28-1" title="1"><span class="ot">{-# LANGUAGE ExplicitForAll #-}</span></a>
+<a class="sourceLine" id="cb28-2" title="2"><span class="ot">g ::</span> <span class="kw">forall</span> b<span class="op">.</span>b <span class="ot">-&gt;</span> b</a></code></pre></div></li>
 <li><p>constrained types <code>0 :: Num a =&gt; a</code></p></li>
 <li><p>algebraic types</p>
-<div class="sourceCode" id="cb27"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb27-1" title="1"><span class="kw">data</span> <span class="dt">Tree</span> a <span class="ot">=</span> <span class="dt">Leaf</span> <span class="op">|</span> <span class="dt">Node</span> a (<span class="dt">Tree</span> a) (<span class="dt">Tree</span> a)</a></code></pre></div></li>
+<div class="sourceCode" id="cb29"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb29-1" title="1"><span class="kw">data</span> <span class="dt">Tree</span> a <span class="ot">=</span> <span class="dt">Leaf</span> <span class="op">|</span> <span class="dt">Node</span> a (<span class="dt">Tree</span> a) (<span class="dt">Tree</span> a)</a></code></pre></div></li>
 <li><p><code>Leaf</code>, <code>Node</code> are *value constructors</p>
-<div class="sourceCode" id="cb28"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb28-1" title="1"><span class="kw">data</span> <span class="dt">Tree</span> a <span class="kw">where</span></a>
-<a class="sourceLine" id="cb28-2" title="2">     <span class="dt">Leaf</span><span class="ot"> ::</span> <span class="dt">Tree</span> a</a>
-<a class="sourceLine" id="cb28-3" title="3">     <span class="dt">Node</span><span class="ot"> ::</span> a <span class="ot">-&gt;</span> <span class="dt">Tree</span> a <span class="ot">-&gt;</span> <span class="dt">Tree</span> a <span class="ot">-&gt;</span> <span class="dt">Tree</span> a</a></code></pre></div></li>
+<div class="sourceCode" id="cb30"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb30-1" title="1"><span class="kw">data</span> <span class="dt">Tree</span> a <span class="kw">where</span></a>
+<a class="sourceLine" id="cb30-2" title="2">     <span class="dt">Leaf</span><span class="ot"> ::</span> <span class="dt">Tree</span> a</a>
+<a class="sourceLine" id="cb30-3" title="3">     <span class="dt">Node</span><span class="ot"> ::</span> a <span class="ot">-&gt;</span> <span class="dt">Tree</span> a <span class="ot">-&gt;</span> <span class="dt">Tree</span> a <span class="ot">-&gt;</span> <span class="dt">Tree</span> a</a></code></pre></div></li>
 <li><p><code>Tree</code> is a <em>type constructor</em>, an operation on types</p></li>
 <li><p>NB empty types are allowed:</p>
-<div class="sourceCode" id="cb29"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb29-1" title="1"><span class="kw">data</span> <span class="dt">Zero</span></a></code></pre></div></li>
+<div class="sourceCode" id="cb31"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb31-1" title="1"><span class="kw">data</span> <span class="dt">Zero</span></a></code></pre></div></li>
 </ul>
 <h1 id="polymorphic-typing">Polymorphic typing</h1>
 <ul>
@@ -505,16 +521,16 @@ to $\Gamma \vdash e :: \forall a.t$
 <h1 id="classes">Classes</h1>
 <ul>
 <li><p>Classes describe properties of types, e.g.</p>
-<div class="sourceCode" id="cb30"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb30-1" title="1"><span class="kw">class</span> <span class="dt">Eq</span> a <span class="kw">where</span></a>
-<a class="sourceLine" id="cb30-2" title="2"><span class="ot">  (==) ::</span> a <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">Bool</span></a>
-<a class="sourceLine" id="cb30-3" title="3"><span class="kw">instance</span> <span class="dt">Eq</span> <span class="dt">Bool</span> <span class="kw">where</span></a>
-<a class="sourceLine" id="cb30-4" title="4">   <span class="dt">True</span>  <span class="op">==</span> <span class="dt">True</span>  <span class="ot">=</span> <span class="dt">True</span></a>
-<a class="sourceLine" id="cb30-5" title="5">   <span class="dt">False</span> <span class="op">==</span> <span class="dt">False</span> <span class="ot">=</span> <span class="dt">True</span></a>
-<a class="sourceLine" id="cb30-6" title="6">   _     <span class="op">==</span> _     <span class="ot">=</span> <span class="dt">False</span></a>
-<a class="sourceLine" id="cb30-7" title="7"></a>
-<a class="sourceLine" id="cb30-8" title="8"><span class="kw">class</span> <span class="dt">Eq</span> a <span class="ot">=&gt;</span> <span class="dt">Ord</span> a <span class="kw">where</span> <span class="op">...</span></a></code></pre></div></li>
+<div class="sourceCode" id="cb32"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb32-1" title="1"><span class="kw">class</span> <span class="dt">Eq</span> a <span class="kw">where</span></a>
+<a class="sourceLine" id="cb32-2" title="2"><span class="ot">  (==) ::</span> a <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">Bool</span></a>
+<a class="sourceLine" id="cb32-3" title="3"><span class="kw">instance</span> <span class="dt">Eq</span> <span class="dt">Bool</span> <span class="kw">where</span></a>
+<a class="sourceLine" id="cb32-4" title="4">   <span class="dt">True</span>  <span class="op">==</span> <span class="dt">True</span>  <span class="ot">=</span> <span class="dt">True</span></a>
+<a class="sourceLine" id="cb32-5" title="5">   <span class="dt">False</span> <span class="op">==</span> <span class="dt">False</span> <span class="ot">=</span> <span class="dt">True</span></a>
+<a class="sourceLine" id="cb32-6" title="6">   _     <span class="op">==</span> _     <span class="ot">=</span> <span class="dt">False</span></a>
+<a class="sourceLine" id="cb32-7" title="7"></a>
+<a class="sourceLine" id="cb32-8" title="8"><span class="kw">class</span> <span class="dt">Eq</span> a <span class="ot">=&gt;</span> <span class="dt">Ord</span> a <span class="kw">where</span> <span class="op">...</span></a></code></pre></div></li>
 <li><p>types can be cnstrained by class context:</p>
-<div class="sourceCode" id="cb31"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb31-1" title="1"><span class="fu">elem</span><span class="ot"> ::</span> <span class="dt">Eq</span> a <span class="ot">=&gt;</span> a <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> <span class="dt">Bool</span></a></code></pre></div></li>
+<div class="sourceCode" id="cb33"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb33-1" title="1"><span class="fu">elem</span><span class="ot"> ::</span> <span class="dt">Eq</span> a <span class="ot">=&gt;</span> a <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> <span class="dt">Bool</span></a></code></pre></div></li>
 <li><p>Implementaction</p>
 <ul>
 <li>an instance is translated to a method dictionary (akin to C++ vtable)</li>
@@ -525,36 +541,36 @@ to $\Gamma \vdash e :: \forall a.t$
 <h1 id="operations-on-types">Operations on types</h1>
 <ul>
 <li><p>A simple example:</p>
-<div class="sourceCode" id="cb32"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb32-1" title="1"><span class="kw">data</span> <span class="dt">Tree</span> a <span class="ot">=</span> <span class="dt">Leaf</span> <span class="op">|</span> <span class="dt">Node</span> a (<span class="dt">Tree</span> a) (<span class="dt">Tree</span> a)</a></code></pre></div></li>
+<div class="sourceCode" id="cb34"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb34-1" title="1"><span class="kw">data</span> <span class="dt">Tree</span> a <span class="ot">=</span> <span class="dt">Leaf</span> <span class="op">|</span> <span class="dt">Node</span> a (<span class="dt">Tree</span> a) (<span class="dt">Tree</span> a)</a></code></pre></div></li>
 <li><p>Type constructors transform types</p></li>
 <li><p>e.g. <code>Tree</code> maps <code>Int</code> to <code>Tree Int</code></p></li>
 <li><p>Higher order functions transform functions</p></li>
 <li><p>Higher order constructors transform type constructors, e.g.</p></li>
 </ul>
-<div class="sourceCode" id="cb33"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb33-1" title="1"><span class="kw">newtype</span> <span class="dt">IdentityT</span> m a <span class="ot">=</span> <span class="dt">IdentityT</span> {<span class="ot"> runIdentityT ::</span> m a }</a></code></pre></div>
+<div class="sourceCode" id="cb35"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb35-1" title="1"><span class="kw">newtype</span> <span class="dt">IdentityT</span> m a <span class="ot">=</span> <span class="dt">IdentityT</span> {<span class="ot"> runIdentityT ::</span> m a }</a></code></pre></div>
 <h1 id="constructor-classes">Constructor classes</h1>
 <ul>
 <li><p>constructor classes describe properties of type constructors:</p>
-<div class="sourceCode" id="cb34"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb34-1" title="1"><span class="kw">class</span> <span class="dt">Functor</span> f <span class="kw">where</span></a>
-<a class="sourceLine" id="cb34-2" title="2"><span class="ot">  fmap ::</span> (a<span class="ot">-&gt;</span>b) <span class="ot">-&gt;</span> f a <span class="ot">-&gt;</span> f b</a>
-<a class="sourceLine" id="cb34-3" title="3">(<span class="op">&lt;$&gt;</span>) <span class="ot">=</span> <span class="fu">fmap</span></a>
-<a class="sourceLine" id="cb34-4" title="4"></a>
-<a class="sourceLine" id="cb34-5" title="5"><span class="kw">instance</span> <span class="dt">Functor</span> [] <span class="kw">where</span></a>
-<a class="sourceLine" id="cb34-6" title="6">  <span class="fu">fmap</span> <span class="ot">=</span> <span class="fu">map</span></a>
-<a class="sourceLine" id="cb34-7" title="7"></a>
-<a class="sourceLine" id="cb34-8" title="8"><span class="kw">class</span> <span class="dt">Functor</span> f <span class="ot">=&gt;</span> <span class="dt">Pointed</span> f <span class="kw">where</span></a>
-<a class="sourceLine" id="cb34-9" title="9"><span class="ot">   pure ::</span> a <span class="ot">-&gt;</span> f a</a>
-<a class="sourceLine" id="cb34-10" title="10"><span class="kw">instance</span> <span class="dt">Pointed</span> [] <span class="kw">where</span></a>
-<a class="sourceLine" id="cb34-11" title="11">   <span class="fu">pure</span> <span class="ot">=</span> (<span class="op">:</span>[])</a>
-<a class="sourceLine" id="cb34-12" title="12"></a>
-<a class="sourceLine" id="cb34-13" title="13"><span class="kw">class</span> <span class="dt">Pointed</span> f <span class="ot">=&gt;</span> <span class="dt">Applicative</span> f <span class="kw">where</span></a>
-<a class="sourceLine" id="cb34-14" title="14"><span class="ot">  (&lt;*&gt;) ::</span> f(a<span class="ot">-&gt;</span>b) <span class="ot">-&gt;</span> f a <span class="ot">-&gt;</span> f b</a>
-<a class="sourceLine" id="cb34-15" title="15"></a>
-<a class="sourceLine" id="cb34-16" title="16"><span class="kw">instance</span> <span class="dt">Applicative</span> [] <span class="kw">where</span></a>
-<a class="sourceLine" id="cb34-17" title="17">  fs <span class="op">&lt;*&gt;</span> xs <span class="ot">=</span> <span class="fu">concat</span> <span class="op">$</span> <span class="fu">flip</span> <span class="fu">map</span> fs (<span class="fu">flip</span> <span class="fu">map</span> xs)</a>
-<a class="sourceLine" id="cb34-18" title="18"></a>
-<a class="sourceLine" id="cb34-19" title="19"><span class="kw">class</span> <span class="dt">Applicative</span> m <span class="ot">=&gt;</span> <span class="dt">Monad&#39;</span> m <span class="kw">where</span></a>
-<a class="sourceLine" id="cb34-20" title="20"><span class="ot">  (&gt;&gt;=) ::</span> m a <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> m b) <span class="ot">-&gt;</span> m b</a></code></pre></div></li>
+<div class="sourceCode" id="cb36"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb36-1" title="1"><span class="kw">class</span> <span class="dt">Functor</span> f <span class="kw">where</span></a>
+<a class="sourceLine" id="cb36-2" title="2"><span class="ot">  fmap ::</span> (a<span class="ot">-&gt;</span>b) <span class="ot">-&gt;</span> f a <span class="ot">-&gt;</span> f b</a>
+<a class="sourceLine" id="cb36-3" title="3">(<span class="op">&lt;$&gt;</span>) <span class="ot">=</span> <span class="fu">fmap</span></a>
+<a class="sourceLine" id="cb36-4" title="4"></a>
+<a class="sourceLine" id="cb36-5" title="5"><span class="kw">instance</span> <span class="dt">Functor</span> [] <span class="kw">where</span></a>
+<a class="sourceLine" id="cb36-6" title="6">  <span class="fu">fmap</span> <span class="ot">=</span> <span class="fu">map</span></a>
+<a class="sourceLine" id="cb36-7" title="7"></a>
+<a class="sourceLine" id="cb36-8" title="8"><span class="kw">class</span> <span class="dt">Functor</span> f <span class="ot">=&gt;</span> <span class="dt">Pointed</span> f <span class="kw">where</span></a>
+<a class="sourceLine" id="cb36-9" title="9"><span class="ot">   pure ::</span> a <span class="ot">-&gt;</span> f a</a>
+<a class="sourceLine" id="cb36-10" title="10"><span class="kw">instance</span> <span class="dt">Pointed</span> [] <span class="kw">where</span></a>
+<a class="sourceLine" id="cb36-11" title="11">   <span class="fu">pure</span> <span class="ot">=</span> (<span class="op">:</span>[])</a>
+<a class="sourceLine" id="cb36-12" title="12"></a>
+<a class="sourceLine" id="cb36-13" title="13"><span class="kw">class</span> <span class="dt">Pointed</span> f <span class="ot">=&gt;</span> <span class="dt">Applicative</span> f <span class="kw">where</span></a>
+<a class="sourceLine" id="cb36-14" title="14"><span class="ot">  (&lt;*&gt;) ::</span> f(a<span class="ot">-&gt;</span>b) <span class="ot">-&gt;</span> f a <span class="ot">-&gt;</span> f b</a>
+<a class="sourceLine" id="cb36-15" title="15"></a>
+<a class="sourceLine" id="cb36-16" title="16"><span class="kw">instance</span> <span class="dt">Applicative</span> [] <span class="kw">where</span></a>
+<a class="sourceLine" id="cb36-17" title="17">  fs <span class="op">&lt;*&gt;</span> xs <span class="ot">=</span> <span class="fu">concat</span> <span class="op">$</span> <span class="fu">flip</span> <span class="fu">map</span> fs (<span class="fu">flip</span> <span class="fu">map</span> xs)</a>
+<a class="sourceLine" id="cb36-18" title="18"></a>
+<a class="sourceLine" id="cb36-19" title="19"><span class="kw">class</span> <span class="dt">Applicative</span> m <span class="ot">=&gt;</span> <span class="dt">Monad&#39;</span> m <span class="kw">where</span></a>
+<a class="sourceLine" id="cb36-20" title="20"><span class="ot">  (&gt;&gt;=) ::</span> m a <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> m b) <span class="ot">-&gt;</span> m b</a></code></pre></div></li>
 </ul>
 <!--
 
@@ -575,39 +591,39 @@ to $\Gamma \vdash e :: \forall a.t$
 <li><p>Type operations are described by their kinds</p></li>
 <li><p>Types (e.g.. <code>Int</code>, <code>Int -&gt; Bool</code>) are of kind <code>*</code></p></li>
 <li><p>One argument constructors are of type (e.g.. <code>Tree</code>) are of kind <code>* -&gt; *</code></p>
-<div class="sourceCode" id="cb35"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb35-1" title="1"><span class="ot">{-#LANGUAGE KindSignatures, ExplicitForAll #-}</span></a>
-<a class="sourceLine" id="cb35-2" title="2"></a>
-<a class="sourceLine" id="cb35-3" title="3"><span class="kw">class</span> <span class="dt">Functor</span> f <span class="ot">=&gt;</span> <span class="dt">Pointed</span> (<span class="ot">f ::</span> <span class="op">*</span> <span class="ot">-&gt;</span> <span class="op">*</span>) <span class="kw">where</span></a>
-<a class="sourceLine" id="cb35-4" title="4"><span class="ot">    pure ::</span> <span class="kw">forall</span> (<span class="ot">a ::</span> <span class="op">*</span>)<span class="op">.</span>a <span class="ot">-&gt;</span> f a</a></code></pre></div></li>
+<div class="sourceCode" id="cb37"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb37-1" title="1"><span class="ot">{-#LANGUAGE KindSignatures, ExplicitForAll #-}</span></a>
+<a class="sourceLine" id="cb37-2" title="2"></a>
+<a class="sourceLine" id="cb37-3" title="3"><span class="kw">class</span> <span class="dt">Functor</span> f <span class="ot">=&gt;</span> <span class="dt">Pointed</span> (<span class="ot">f ::</span> <span class="op">*</span> <span class="ot">-&gt;</span> <span class="op">*</span>) <span class="kw">where</span></a>
+<a class="sourceLine" id="cb37-4" title="4"><span class="ot">    pure ::</span> <span class="kw">forall</span> (<span class="ot">a ::</span> <span class="op">*</span>)<span class="op">.</span>a <span class="ot">-&gt;</span> f a</a></code></pre></div></li>
 <li><p>More complex kinds are possible, e.g. for monad transformers:</p>
-<div class="sourceCode" id="cb36"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb36-1" title="1"><span class="kw">class</span> <span class="dt">MonadTrans</span> (<span class="ot">t ::</span> (<span class="op">*</span> <span class="ot">-&gt;</span> <span class="op">*</span>) <span class="ot">-&gt;</span> <span class="op">*</span> <span class="ot">-&gt;</span> <span class="op">*</span>) <span class="kw">where</span></a>
-<a class="sourceLine" id="cb36-2" title="2"><span class="ot">    lift ::</span> <span class="dt">Monad</span> (<span class="ot">m ::</span> <span class="op">*</span> <span class="ot">-&gt;</span> <span class="op">*</span>) <span class="ot">=&gt;</span> <span class="kw">forall</span> (<span class="ot">a ::</span> <span class="op">*</span>)<span class="op">.</span>m a <span class="ot">-&gt;</span> t m a</a></code></pre></div></li>
+<div class="sourceCode" id="cb38"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb38-1" title="1"><span class="kw">class</span> <span class="dt">MonadTrans</span> (<span class="ot">t ::</span> (<span class="op">*</span> <span class="ot">-&gt;</span> <span class="op">*</span>) <span class="ot">-&gt;</span> <span class="op">*</span> <span class="ot">-&gt;</span> <span class="op">*</span>) <span class="kw">where</span></a>
+<a class="sourceLine" id="cb38-2" title="2"><span class="ot">    lift ::</span> <span class="dt">Monad</span> (<span class="ot">m ::</span> <span class="op">*</span> <span class="ot">-&gt;</span> <span class="op">*</span>) <span class="ot">=&gt;</span> <span class="kw">forall</span> (<span class="ot">a ::</span> <span class="op">*</span>)<span class="op">.</span>m a <span class="ot">-&gt;</span> t m a</a></code></pre></div></li>
 </ul>
 <p>NB spaces are obligatory - <code>::*-&gt;*</code> is one lexem</p>
 <p>Newer Haskell versions allow introducing user kinds - we’ll talk about them later.</p>
 <h1 id="multiparameter-typeclasses">Multiparameter typeclasses</h1>
 <ul>
 <li><p>Sometimes we need to describe a relationship between types rather than just a single type:</p>
-<div class="sourceCode" id="cb37"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb37-1" title="1"><span class="ot">{-#LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}</span></a>
-<a class="sourceLine" id="cb37-2" title="2"><span class="kw">class</span> <span class="dt">Iso</span> a b <span class="kw">where</span></a>
-<a class="sourceLine" id="cb37-3" title="3"><span class="ot">  iso ::</span> a <span class="ot">-&gt;</span> b</a>
-<a class="sourceLine" id="cb37-4" title="4"><span class="ot">  osi ::</span> b <span class="ot">-&gt;</span> a</a>
-<a class="sourceLine" id="cb37-5" title="5"></a>
-<a class="sourceLine" id="cb37-6" title="6"><span class="kw">instance</span> <span class="dt">Iso</span> a a <span class="kw">where</span></a>
-<a class="sourceLine" id="cb37-7" title="7">  iso <span class="ot">=</span> <span class="fu">id</span></a>
-<a class="sourceLine" id="cb37-8" title="8">  osi <span class="ot">=</span> <span class="fu">id</span></a>
-<a class="sourceLine" id="cb37-9" title="9"></a>
-<a class="sourceLine" id="cb37-10" title="10"><span class="kw">instance</span> <span class="dt">Iso</span> ((a,b)<span class="ot">-&gt;</span>c) (a<span class="ot">-&gt;</span>b<span class="ot">-&gt;</span>c) <span class="kw">where</span></a>
-<a class="sourceLine" id="cb37-11" title="11">  iso <span class="ot">=</span> <span class="fu">curry</span></a>
-<a class="sourceLine" id="cb37-12" title="12">  osi <span class="ot">=</span> <span class="fu">uncurry</span></a>
-<a class="sourceLine" id="cb37-13" title="13"></a>
-<a class="sourceLine" id="cb37-14" title="14"><span class="kw">instance</span> (<span class="dt">Iso</span> a b) <span class="ot">=&gt;</span> <span class="dt">Iso</span> [a] [b] <span class="kw">where</span></a>
-<a class="sourceLine" id="cb37-15" title="15"> iso <span class="ot">=</span> <span class="fu">map</span> iso</a>
-<a class="sourceLine" id="cb37-16" title="16"> osi <span class="ot">=</span> <span class="fu">map</span> osi</a></code></pre></div></li>
+<div class="sourceCode" id="cb39"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb39-1" title="1"><span class="ot">{-#LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}</span></a>
+<a class="sourceLine" id="cb39-2" title="2"><span class="kw">class</span> <span class="dt">Iso</span> a b <span class="kw">where</span></a>
+<a class="sourceLine" id="cb39-3" title="3"><span class="ot">  iso ::</span> a <span class="ot">-&gt;</span> b</a>
+<a class="sourceLine" id="cb39-4" title="4"><span class="ot">  osi ::</span> b <span class="ot">-&gt;</span> a</a>
+<a class="sourceLine" id="cb39-5" title="5"></a>
+<a class="sourceLine" id="cb39-6" title="6"><span class="kw">instance</span> <span class="dt">Iso</span> a a <span class="kw">where</span></a>
+<a class="sourceLine" id="cb39-7" title="7">  iso <span class="ot">=</span> <span class="fu">id</span></a>
+<a class="sourceLine" id="cb39-8" title="8">  osi <span class="ot">=</span> <span class="fu">id</span></a>
+<a class="sourceLine" id="cb39-9" title="9"></a>
+<a class="sourceLine" id="cb39-10" title="10"><span class="kw">instance</span> <span class="dt">Iso</span> ((a,b)<span class="ot">-&gt;</span>c) (a<span class="ot">-&gt;</span>b<span class="ot">-&gt;</span>c) <span class="kw">where</span></a>
+<a class="sourceLine" id="cb39-11" title="11">  iso <span class="ot">=</span> <span class="fu">curry</span></a>
+<a class="sourceLine" id="cb39-12" title="12">  osi <span class="ot">=</span> <span class="fu">uncurry</span></a>
+<a class="sourceLine" id="cb39-13" title="13"></a>
+<a class="sourceLine" id="cb39-14" title="14"><span class="kw">instance</span> (<span class="dt">Iso</span> a b) <span class="ot">=&gt;</span> <span class="dt">Iso</span> [a] [b] <span class="kw">where</span></a>
+<a class="sourceLine" id="cb39-15" title="15"> iso <span class="ot">=</span> <span class="fu">map</span> iso</a>
+<a class="sourceLine" id="cb39-16" title="16"> osi <span class="ot">=</span> <span class="fu">map</span> osi</a></code></pre></div></li>
 <li><p>NB: in the last example <code>iso</code> has a different type on the left than on the right.</p></li>
 <li><p>Exercise: write more instances of <code>Iso</code>, e.g.</p>
-<div class="sourceCode" id="cb38"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb38-1" title="1"><span class="kw">instance</span> (<span class="dt">Functor</span> f, <span class="dt">Iso</span> a b) <span class="ot">=&gt;</span> <span class="dt">Iso</span> (f a) (f b) <span class="kw">where</span></a>
-<a class="sourceLine" id="cb38-2" title="2"><span class="kw">instance</span> <span class="dt">Iso</span> (a<span class="ot">-&gt;</span>b<span class="ot">-&gt;</span>c) (b<span class="ot">-&gt;</span>a<span class="ot">-&gt;</span>c) <span class="kw">where</span></a></code></pre></div></li>
+<div class="sourceCode" id="cb40"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb40-1" title="1"><span class="kw">instance</span> (<span class="dt">Functor</span> f, <span class="dt">Iso</span> a b) <span class="ot">=&gt;</span> <span class="dt">Iso</span> (f a) (f b) <span class="kw">where</span></a>
+<a class="sourceLine" id="cb40-2" title="2"><span class="kw">instance</span> <span class="dt">Iso</span> (a<span class="ot">-&gt;</span>b<span class="ot">-&gt;</span>c) (b<span class="ot">-&gt;</span>a<span class="ot">-&gt;</span>c) <span class="kw">where</span></a></code></pre></div></li>
 </ul>
 <h1 id="digression---flexibleinstances">Digression - FlexibleInstances</h1>
 <p>Haskell 2010</p>
@@ -621,24 +637,26 @@ furthermore, T must not be a type synonym, and the ui must all be
 distinct.
 -->
 <ul>
-<li>an instance head must have the form C (T u1 … uk), where T is a type constructor defined by a data or newtype declaration and the ui are distinct type variables, and</li>
+<li>an instance head must have the form <code>C (T u1 ... uk)</code>, where <code>T</code> is a type constructor defined by a data or newtype declaration and the <code>u_i</code> are distinct type variables</li>
 </ul>
 <!--
-*    each assertion in the context must have the form C' v, where v is one of the ui.
+*    and each assertion in the context must have the form C' v, where v is one of the ui.
 -->
 <p>This prohibits instance declarations such as:</p>
-<p>instance C (a,a) where … instance C (Int,a) where … instance C [[a]] where …</p>
+<pre><code>  instance C (a,a) where ...
+  instance C (Int,a) where ...
+  instance C [[a]] where ...</code></pre>
 <p><code>instance Iso a a</code> does not meet these conditions, but it’s easy to see what relation we mean.</p>
 <h1 id="problem-with-muliparameter-type-classes">Problem with muliparameter type classes</h1>
 <p>Consider a class of collections, e.g.</p>
 <p><code>BadCollection.hs</code></p>
-<div class="sourceCode" id="cb39"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb39-1" title="1"><span class="kw">class</span> <span class="dt">Collection</span> c <span class="kw">where</span></a>
-<a class="sourceLine" id="cb39-2" title="2"><span class="ot">  insert ::</span> e <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> c</a>
-<a class="sourceLine" id="cb39-3" title="3"><span class="ot">  member ::</span> e <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> <span class="dt">Bool</span></a>
-<a class="sourceLine" id="cb39-4" title="4"></a>
-<a class="sourceLine" id="cb39-5" title="5"><span class="kw">instance</span> <span class="dt">Collection</span> [a] <span class="kw">where</span></a>
-<a class="sourceLine" id="cb39-6" title="6">     insert <span class="ot">=</span> (<span class="op">:</span>)</a>
-<a class="sourceLine" id="cb39-7" title="7">     member <span class="ot">=</span> <span class="fu">elem</span></a></code></pre></div>
+<div class="sourceCode" id="cb42"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb42-1" title="1"><span class="kw">class</span> <span class="dt">Collection</span> c <span class="kw">where</span></a>
+<a class="sourceLine" id="cb42-2" title="2"><span class="ot">  insert ::</span> e <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> c</a>
+<a class="sourceLine" id="cb42-3" title="3"><span class="ot">  member ::</span> e <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> <span class="dt">Bool</span></a>
+<a class="sourceLine" id="cb42-4" title="4"></a>
+<a class="sourceLine" id="cb42-5" title="5"><span class="kw">instance</span> <span class="dt">Collection</span> [a] <span class="kw">where</span></a>
+<a class="sourceLine" id="cb42-6" title="6">     insert <span class="ot">=</span> (<span class="op">:</span>)</a>
+<a class="sourceLine" id="cb42-7" title="7">     member <span class="ot">=</span> <span class="fu">elem</span></a></code></pre></div>
 <pre><code>    Couldn&#39;t match type `e&#39; with `a&#39;
       `e&#39; is a rigid type variable bound by
           the type signature for member :: e -&gt; [a] -&gt; Bool
@@ -648,9 +666,9 @@ distinct.
           at BadCollection.hs:5:22</code></pre>
 <p>Why?</p>
 <h1 id="problem-with-muliparameter-type-classes-1">Problem with muliparameter type classes</h1>
-<div class="sourceCode" id="cb41"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb41-1" title="1"><span class="kw">class</span> <span class="dt">Collection</span> c <span class="kw">where</span></a>
-<a class="sourceLine" id="cb41-2" title="2"><span class="ot"> insert ::</span> e <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> c</a>
-<a class="sourceLine" id="cb41-3" title="3"><span class="ot"> member ::</span> e <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> <span class="dt">Bool</span></a></code></pre></div>
+<div class="sourceCode" id="cb44"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb44-1" title="1"><span class="kw">class</span> <span class="dt">Collection</span> c <span class="kw">where</span></a>
+<a class="sourceLine" id="cb44-2" title="2"><span class="ot"> insert ::</span> e <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> c</a>
+<a class="sourceLine" id="cb44-3" title="3"><span class="ot"> member ::</span> e <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> <span class="dt">Bool</span></a></code></pre></div>
 <p>translates more or less to</p>
 <pre><code>data ColDic c = CD
  {
@@ -658,9 +676,9 @@ distinct.
  , member :: forall e.e -&gt; c -&gt; Bool
  }</code></pre>
 <p>… this is not what we meant</p>
-<div class="sourceCode" id="cb43"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb43-1" title="1"><span class="kw">instance</span> <span class="dt">Collection</span> [a] <span class="kw">where</span></a>
-<a class="sourceLine" id="cb43-2" title="2">   insert <span class="ot">=</span> (<span class="op">:</span>)</a>
-<a class="sourceLine" id="cb43-3" title="3">   member <span class="ot">=</span> <span class="fu">undefined</span></a></code></pre></div>
+<div class="sourceCode" id="cb46"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb46-1" title="1"><span class="kw">instance</span> <span class="dt">Collection</span> [a] <span class="kw">where</span></a>
+<a class="sourceLine" id="cb46-2" title="2">   insert <span class="ot">=</span> (<span class="op">:</span>)</a>
+<a class="sourceLine" id="cb46-3" title="3">   member <span class="ot">=</span> <span class="fu">undefined</span></a></code></pre></div>
 <pre><code>-- (:) :: forall t. t -&gt; [t] -&gt; [t]
 ColList :: forall a. ColDic a
 ColList = \@ a -&gt; CD { insert = (:) @ a, member =</code></pre>
@@ -669,69 +687,69 @@ ColList = \@ a -&gt; CD { insert = (:) @ a, member =</code></pre>
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 --></p>
-<div class="sourceCode" id="cb45"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb45-1" title="1"><span class="kw">class</span> <span class="dt">Collection</span> c e <span class="kw">where</span></a>
-<a class="sourceLine" id="cb45-2" title="2"><span class="ot">  empty ::</span> c</a>
-<a class="sourceLine" id="cb45-3" title="3"><span class="ot">  insert ::</span> e <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> c</a>
-<a class="sourceLine" id="cb45-4" title="4"><span class="ot">  member ::</span> e <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> <span class="dt">Bool</span></a>
-<a class="sourceLine" id="cb45-5" title="5"></a>
-<a class="sourceLine" id="cb45-6" title="6"><span class="kw">instance</span> <span class="dt">Eq</span> a <span class="ot">=&gt;</span> <span class="dt">Collection</span> [a] a <span class="kw">where</span></a>
-<a class="sourceLine" id="cb45-7" title="7">  empty <span class="ot">=</span> []</a>
-<a class="sourceLine" id="cb45-8" title="8">  insert  <span class="ot">=</span> (<span class="op">:</span>)</a>
-<a class="sourceLine" id="cb45-9" title="9">  member <span class="ot">=</span> <span class="fu">elem</span></a>
-<a class="sourceLine" id="cb45-10" title="10"></a>
-<a class="sourceLine" id="cb45-11" title="11"></a>
-<a class="sourceLine" id="cb45-12" title="12">ins2 x y c <span class="ot">=</span> insert y (insert x c)</a>
-<a class="sourceLine" id="cb45-13" title="13"><span class="co">-- ins2 :: (Collection c e, Collection c e1) =&gt; e1 -&gt; e -&gt; c -&gt; c</span></a>
-<a class="sourceLine" id="cb45-14" title="14"></a>
-<a class="sourceLine" id="cb45-15" title="15"><span class="ot">problem1 ::</span> [<span class="dt">Int</span>]</a>
-<a class="sourceLine" id="cb45-16" title="16">problem1 <span class="ot">=</span> ins2 <span class="dv">1</span> <span class="dv">2</span> []</a>
-<a class="sourceLine" id="cb45-17" title="17"><span class="co">-- No instances for (Collection [Int] e0, Collection [Int] e1)</span></a>
-<a class="sourceLine" id="cb45-18" title="18"><span class="co">-- arising from a use of `ins2&#39;</span></a>
-<a class="sourceLine" id="cb45-19" title="19"></a>
-<a class="sourceLine" id="cb45-20" title="20">problem2 <span class="ot">=</span> ins2 <span class="ch">&#39;a&#39;</span> <span class="ch">&#39;b&#39;</span> []</a>
-<a class="sourceLine" id="cb45-21" title="21"><span class="co">-- No instance for (Collection [a0] Char)</span></a>
-<a class="sourceLine" id="cb45-22" title="22"><span class="co">--       arising from a use of `ins2&#39;</span></a>
-<a class="sourceLine" id="cb45-23" title="23"></a>
-<a class="sourceLine" id="cb45-24" title="24"><span class="ot">problem3 ::</span> (<span class="dt">Collection</span> c0 <span class="dt">Char</span>, <span class="dt">Collection</span> c0 <span class="dt">Bool</span>) <span class="ot">=&gt;</span> c0 <span class="ot">-&gt;</span> c0</a>
-<a class="sourceLine" id="cb45-25" title="25">problem3 <span class="ot">=</span> ins2 <span class="dt">True</span> <span class="ch">&#39;a&#39;</span></a>
-<a class="sourceLine" id="cb45-26" title="26"><span class="co">-- Here the problem is that this is type correct, but shouldn&#39;t</span></a></code></pre></div>
+<div class="sourceCode" id="cb48"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb48-1" title="1"><span class="kw">class</span> <span class="dt">Collection</span> c e <span class="kw">where</span></a>
+<a class="sourceLine" id="cb48-2" title="2"><span class="ot">  empty ::</span> c</a>
+<a class="sourceLine" id="cb48-3" title="3"><span class="ot">  insert ::</span> e <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> c</a>
+<a class="sourceLine" id="cb48-4" title="4"><span class="ot">  member ::</span> e <span class="ot">-&gt;</span> c <span class="ot">-&gt;</span> <span class="dt">Bool</span></a>
+<a class="sourceLine" id="cb48-5" title="5"></a>
+<a class="sourceLine" id="cb48-6" title="6"><span class="kw">instance</span> <span class="dt">Eq</span> a <span class="ot">=&gt;</span> <span class="dt">Collection</span> [a] a <span class="kw">where</span></a>
+<a class="sourceLine" id="cb48-7" title="7">  empty <span class="ot">=</span> []</a>
+<a class="sourceLine" id="cb48-8" title="8">  insert  <span class="ot">=</span> (<span class="op">:</span>)</a>
+<a class="sourceLine" id="cb48-9" title="9">  member <span class="ot">=</span> <span class="fu">elem</span></a>
+<a class="sourceLine" id="cb48-10" title="10"></a>
+<a class="sourceLine" id="cb48-11" title="11"></a>
+<a class="sourceLine" id="cb48-12" title="12">ins2 x y c <span class="ot">=</span> insert y (insert x c)</a>
+<a class="sourceLine" id="cb48-13" title="13"><span class="co">-- ins2 :: (Collection c e, Collection c e1) =&gt; e1 -&gt; e -&gt; c -&gt; c</span></a>
+<a class="sourceLine" id="cb48-14" title="14"></a>
+<a class="sourceLine" id="cb48-15" title="15"><span class="ot">problem1 ::</span> [<span class="dt">Int</span>]</a>
+<a class="sourceLine" id="cb48-16" title="16">problem1 <span class="ot">=</span> ins2 <span class="dv">1</span> <span class="dv">2</span> []</a>
+<a class="sourceLine" id="cb48-17" title="17"><span class="co">-- No instances for (Collection [Int] e0, Collection [Int] e1)</span></a>
+<a class="sourceLine" id="cb48-18" title="18"><span class="co">-- arising from a use of `ins2&#39;</span></a>
+<a class="sourceLine" id="cb48-19" title="19"></a>
+<a class="sourceLine" id="cb48-20" title="20">problem2 <span class="ot">=</span> ins2 <span class="ch">&#39;a&#39;</span> <span class="ch">&#39;b&#39;</span> []</a>
+<a class="sourceLine" id="cb48-21" title="21"><span class="co">-- No instance for (Collection [a0] Char)</span></a>
+<a class="sourceLine" id="cb48-22" title="22"><span class="co">--       arising from a use of `ins2&#39;</span></a>
+<a class="sourceLine" id="cb48-23" title="23"></a>
+<a class="sourceLine" id="cb48-24" title="24"><span class="ot">problem3 ::</span> (<span class="dt">Collection</span> c0 <span class="dt">Char</span>, <span class="dt">Collection</span> c0 <span class="dt">Bool</span>) <span class="ot">=&gt;</span> c0 <span class="ot">-&gt;</span> c0</a>
+<a class="sourceLine" id="cb48-25" title="25">problem3 <span class="ot">=</span> ins2 <span class="dt">True</span> <span class="ch">&#39;a&#39;</span></a>
+<a class="sourceLine" id="cb48-26" title="26"><span class="co">-- Here the problem is that this is type correct, but shouldn&#39;t</span></a></code></pre></div>
 <p>Exercise: verify that <code>Collects</code> solves the problem we had with <code>Collection</code></p>
 <h1 id="functional-dependencies">Functional dependencies</h1>
 <p>Sometimes in multiparameter typeclasses, one parameter determines another, e.g.</p>
-<div class="sourceCode" id="cb46"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb46-1" title="1"> <span class="kw">class</span> (<span class="dt">Monad</span> m) <span class="ot">=&gt;</span> <span class="dt">MonadState</span> s m <span class="op">|</span> m <span class="ot">-&gt;</span> s <span class="kw">where</span> <span class="op">...</span></a>
-<a class="sourceLine" id="cb46-2" title="2"></a>
-<a class="sourceLine" id="cb46-3" title="3"> <span class="kw">class</span> <span class="dt">Collects</span> e ce <span class="op">|</span> ce <span class="ot">-&gt;</span> e <span class="kw">where</span></a>
-<a class="sourceLine" id="cb46-4" title="4"><span class="ot">      empty  ::</span> ce</a>
-<a class="sourceLine" id="cb46-5" title="5"><span class="ot">      insert ::</span> e <span class="ot">-&gt;</span> ce <span class="ot">-&gt;</span> ce</a>
-<a class="sourceLine" id="cb46-6" title="6"><span class="ot">      member ::</span> e <span class="ot">-&gt;</span> ce <span class="ot">-&gt;</span> <span class="dt">Bool</span></a></code></pre></div>
+<div class="sourceCode" id="cb49"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb49-1" title="1"> <span class="kw">class</span> (<span class="dt">Monad</span> m) <span class="ot">=&gt;</span> <span class="dt">MonadState</span> s m <span class="op">|</span> m <span class="ot">-&gt;</span> s <span class="kw">where</span> <span class="op">...</span></a>
+<a class="sourceLine" id="cb49-2" title="2"></a>
+<a class="sourceLine" id="cb49-3" title="3"> <span class="kw">class</span> <span class="dt">Collects</span> e ce <span class="op">|</span> ce <span class="ot">-&gt;</span> e <span class="kw">where</span></a>
+<a class="sourceLine" id="cb49-4" title="4"><span class="ot">      empty  ::</span> ce</a>
+<a class="sourceLine" id="cb49-5" title="5"><span class="ot">      insert ::</span> e <span class="ot">-&gt;</span> ce <span class="ot">-&gt;</span> ce</a>
+<a class="sourceLine" id="cb49-6" title="6"><span class="ot">      member ::</span> e <span class="ot">-&gt;</span> ce <span class="ot">-&gt;</span> <span class="dt">Bool</span></a></code></pre></div>
 <p>Problem: <em>Fundeps are very, very tricky.</em> - SPJ</p>
 <p>More: http://research.microsoft.com/en-us/um/people/simonpj/papers/fd-chr/</p>
 <h1 id="reflection---why-not-constructor-classes">Reflection - why not constructor classes?</h1>
 <p>We could try to solve the problem this way:</p>
-<div class="sourceCode" id="cb47"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb47-1" title="1"><span class="kw">class</span> <span class="dt">Collection</span> c <span class="kw">where</span></a>
-<a class="sourceLine" id="cb47-2" title="2"><span class="ot">  insert ::</span> e <span class="ot">-&gt;</span> c e <span class="ot">-&gt;</span> c e</a>
-<a class="sourceLine" id="cb47-3" title="3"><span class="ot">  member ::</span> <span class="dt">Eq</span> e <span class="ot">=&gt;</span> e <span class="ot">-&gt;</span> c e<span class="ot">-&gt;</span> <span class="dt">Bool</span></a>
-<a class="sourceLine" id="cb47-4" title="4"></a>
-<a class="sourceLine" id="cb47-5" title="5"><span class="kw">instance</span> <span class="dt">Collection</span> [] <span class="kw">where</span></a>
-<a class="sourceLine" id="cb47-6" title="6">     insert x xs <span class="ot">=</span> x<span class="op">:</span>xs</a>
-<a class="sourceLine" id="cb47-7" title="7">     member <span class="ot">=</span> <span class="fu">elem</span></a></code></pre></div>
+<div class="sourceCode" id="cb50"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb50-1" title="1"><span class="kw">class</span> <span class="dt">Collection</span> c <span class="kw">where</span></a>
+<a class="sourceLine" id="cb50-2" title="2"><span class="ot">  insert ::</span> e <span class="ot">-&gt;</span> c e <span class="ot">-&gt;</span> c e</a>
+<a class="sourceLine" id="cb50-3" title="3"><span class="ot">  member ::</span> <span class="dt">Eq</span> e <span class="ot">=&gt;</span> e <span class="ot">-&gt;</span> c e<span class="ot">-&gt;</span> <span class="dt">Bool</span></a>
+<a class="sourceLine" id="cb50-4" title="4"></a>
+<a class="sourceLine" id="cb50-5" title="5"><span class="kw">instance</span> <span class="dt">Collection</span> [] <span class="kw">where</span></a>
+<a class="sourceLine" id="cb50-6" title="6">     insert x xs <span class="ot">=</span> x<span class="op">:</span>xs</a>
+<a class="sourceLine" id="cb50-7" title="7">     member <span class="ot">=</span> <span class="fu">elem</span></a></code></pre></div>
 <p>but this does not allow to solve the problem with the state monad:</p>
-<div class="sourceCode" id="cb48"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb48-1" title="1"> <span class="kw">class</span> (<span class="dt">Monad</span> m) <span class="ot">=&gt;</span> <span class="dt">MonadState</span> s m <span class="op">|</span> m <span class="ot">-&gt;</span> s <span class="kw">where</span></a>
-<a class="sourceLine" id="cb48-2" title="2"><span class="ot">   get ::</span> m s</a>
-<a class="sourceLine" id="cb48-3" title="3"><span class="ot">   put ::</span> s <span class="ot">-&gt;</span> m ()</a></code></pre></div>
+<div class="sourceCode" id="cb51"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb51-1" title="1"> <span class="kw">class</span> (<span class="dt">Monad</span> m) <span class="ot">=&gt;</span> <span class="dt">MonadState</span> s m <span class="op">|</span> m <span class="ot">-&gt;</span> s <span class="kw">where</span></a>
+<a class="sourceLine" id="cb51-2" title="2"><span class="ot">   get ::</span> m s</a>
+<a class="sourceLine" id="cb51-3" title="3"><span class="ot">   put ::</span> s <span class="ot">-&gt;</span> m ()</a></code></pre></div>
 <p>the state type <code>s</code> is not a parameter of <code>m</code></p>
 <h1 id="fundeps-are-very-very-tricky">Fundeps are very very tricky</h1>
-<div class="sourceCode" id="cb49"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb49-1" title="1"><span class="kw">class</span> <span class="dt">Mul</span> a b c <span class="op">|</span> a b <span class="ot">-&gt;</span> c <span class="kw">where</span></a>
-<a class="sourceLine" id="cb49-2" title="2"><span class="ot">  (*) ::</span> a <span class="ot">-&gt;</span> b <span class="ot">-&gt;</span> c</a>
-<a class="sourceLine" id="cb49-3" title="3"></a>
-<a class="sourceLine" id="cb49-4" title="4"><span class="kw">newtype</span> <span class="dt">Vec</span> a <span class="ot">=</span> <span class="dt">Vec</span> [a]</a>
-<a class="sourceLine" id="cb49-5" title="5"><span class="kw">instance</span> <span class="dt">Functor</span> <span class="dt">Vec</span> <span class="kw">where</span></a>
-<a class="sourceLine" id="cb49-6" title="6">  <span class="fu">fmap</span> f (<span class="dt">Vec</span> as) <span class="ot">=</span> <span class="dt">Vec</span> <span class="op">$</span> <span class="fu">map</span> f as</a>
-<a class="sourceLine" id="cb49-7" title="7"></a>
-<a class="sourceLine" id="cb49-8" title="8"><span class="kw">instance</span> <span class="dt">Mul</span> a b c <span class="ot">=&gt;</span> <span class="dt">Mul</span> a (<span class="dt">Vec</span> b) (<span class="dt">Vec</span> c) <span class="kw">where</span></a>
-<a class="sourceLine" id="cb49-9" title="9">  a <span class="op">*</span> b <span class="ot">=</span> <span class="fu">fmap</span> (a<span class="op">*</span>) b</a>
-<a class="sourceLine" id="cb49-10" title="10"></a>
-<a class="sourceLine" id="cb49-11" title="11">f t x y <span class="ot">=</span> <span class="kw">if</span> t <span class="kw">then</span>  x <span class="op">*</span> (<span class="dt">Vec</span> [y]) <span class="kw">else</span> y</a></code></pre></div>
+<div class="sourceCode" id="cb52"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb52-1" title="1"><span class="kw">class</span> <span class="dt">Mul</span> a b c <span class="op">|</span> a b <span class="ot">-&gt;</span> c <span class="kw">where</span></a>
+<a class="sourceLine" id="cb52-2" title="2"><span class="ot">  (*) ::</span> a <span class="ot">-&gt;</span> b <span class="ot">-&gt;</span> c</a>
+<a class="sourceLine" id="cb52-3" title="3"></a>
+<a class="sourceLine" id="cb52-4" title="4"><span class="kw">newtype</span> <span class="dt">Vec</span> a <span class="ot">=</span> <span class="dt">Vec</span> [a]</a>
+<a class="sourceLine" id="cb52-5" title="5"><span class="kw">instance</span> <span class="dt">Functor</span> <span class="dt">Vec</span> <span class="kw">where</span></a>
+<a class="sourceLine" id="cb52-6" title="6">  <span class="fu">fmap</span> f (<span class="dt">Vec</span> as) <span class="ot">=</span> <span class="dt">Vec</span> <span class="op">$</span> <span class="fu">map</span> f as</a>
+<a class="sourceLine" id="cb52-7" title="7"></a>
+<a class="sourceLine" id="cb52-8" title="8"><span class="kw">instance</span> <span class="dt">Mul</span> a b c <span class="ot">=&gt;</span> <span class="dt">Mul</span> a (<span class="dt">Vec</span> b) (<span class="dt">Vec</span> c) <span class="kw">where</span></a>
+<a class="sourceLine" id="cb52-9" title="9">  a <span class="op">*</span> b <span class="ot">=</span> <span class="fu">fmap</span> (a<span class="op">*</span>) b</a>
+<a class="sourceLine" id="cb52-10" title="10"></a>
+<a class="sourceLine" id="cb52-11" title="11">f t x y <span class="ot">=</span> <span class="kw">if</span> t <span class="kw">then</span>  x <span class="op">*</span> (<span class="dt">Vec</span> [y]) <span class="kw">else</span> y</a></code></pre></div>
 <p>What is the type of <code>f</code>? Let <code>x::a</code>, <code>y::b</code>.</p>
 <p>Then the result type of <code>f</code> is <code>b</code> and we need an instance of <code>Mul a (Vec b) b</code></p>
 <p>Now Z kolei <code>a b -&gt; c</code> implies <code>b ~ Vec c</code> for some <code>c</code>, so we are lookng for an instance</p>
@@ -739,39 +757,39 @@ ColList = \@ a -&gt; CD { insert = (:) @ a, member =</code></pre>
 <p>applying the rule <code>Mul a b c =&gt; Mul a (Vec b) (Vec c)</code> leads to <code>Mul a (Vec c) c</code>.</p>
 <p>…and so on</p>
 <h1 id="lets-try">Let’s try</h1>
-<div class="sourceCode" id="cb51"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb51-1" title="1">Mul1.hs<span class="op">:</span><span class="dv">16</span><span class="op">:</span><span class="dv">21</span><span class="op">:</span></a>
-<a class="sourceLine" id="cb51-2" title="2">    <span class="dt">Context</span> reduction stack overflow; size <span class="ot">=</span> <span class="dv">21</span></a>
-<a class="sourceLine" id="cb51-3" title="3">    <span class="dt">Use</span> <span class="op">-</span>fcontext<span class="op">-</span>stack<span class="ot">=</span><span class="dt">N</span> to increase stack size to <span class="dt">N</span></a>
-<a class="sourceLine" id="cb51-4" title="4"><span class="ot">      co ::</span> c18 <span class="op">~</span> <span class="dt">Vec</span> c19</a>
-<a class="sourceLine" id="cb51-5" title="5">      <span class="op">$</span><span class="ot">dMul ::</span> <span class="dt">Mul</span> a0 c17 c18</a>
-<a class="sourceLine" id="cb51-6" title="6">      <span class="op">$</span><span class="ot">dMul ::</span> <span class="dt">Mul</span> a0 c16 c17</a>
-<a class="sourceLine" id="cb51-7" title="7">      <span class="op">...</span></a>
-<a class="sourceLine" id="cb51-8" title="8">      <span class="op">$</span><span class="ot">dMul ::</span> <span class="dt">Mul</span> a0 c1 c2</a>
-<a class="sourceLine" id="cb51-9" title="9">      <span class="op">$</span><span class="ot">dMul ::</span> <span class="dt">Mul</span> a0 c c1</a>
-<a class="sourceLine" id="cb51-10" title="10">      <span class="op">$</span><span class="ot">dMul ::</span> <span class="dt">Mul</span> a0 c0 c</a>
-<a class="sourceLine" id="cb51-11" title="11">      <span class="op">$</span><span class="ot">dMul ::</span> <span class="dt">Mul</span> a0 (<span class="dt">Vec</span> c0) c0</a>
-<a class="sourceLine" id="cb51-12" title="12">    <span class="dt">When</span> using functional dependencies to combine</a>
-<a class="sourceLine" id="cb51-13" title="13">      <span class="dt">Mul</span> a (<span class="dt">Vec</span> b) (<span class="dt">Vec</span> c),</a>
-<a class="sourceLine" id="cb51-14" title="14">        arising from the dependency <span class="ot">`a b -&gt; c&#39;</span></a>
-<a class="sourceLine" id="cb51-15" title="15"><span class="ot">        in the instance declaration at 3/Mul1.hs:13:10</span></a>
-<a class="sourceLine" id="cb51-16" title="16"><span class="ot">      Mul a0 (Vec c18) c18,</span></a>
-<a class="sourceLine" id="cb51-17" title="17"><span class="ot">        arising from a use of `</span>mul&#39; at <span class="dv">3</span><span class="op">/</span>Mul1.hs<span class="op">:</span><span class="dv">16</span><span class="op">:</span><span class="dv">21</span><span class="op">-</span><span class="dv">23</span></a>
-<a class="sourceLine" id="cb51-18" title="18">    <span class="dt">In</span> the expression<span class="op">:</span> mul x (<span class="dt">Vec</span> [y])</a>
-<a class="sourceLine" id="cb51-19" title="19">    <span class="dt">In</span> the expression<span class="op">:</span> <span class="kw">if</span> b <span class="kw">then</span> mul x (<span class="dt">Vec</span> [y]) <span class="kw">else</span> y</a></code></pre></div>
+<div class="sourceCode" id="cb54"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb54-1" title="1">Mul1.hs<span class="op">:</span><span class="dv">16</span><span class="op">:</span><span class="dv">21</span><span class="op">:</span></a>
+<a class="sourceLine" id="cb54-2" title="2">    <span class="dt">Context</span> reduction stack overflow; size <span class="ot">=</span> <span class="dv">21</span></a>
+<a class="sourceLine" id="cb54-3" title="3">    <span class="dt">Use</span> <span class="op">-</span>fcontext<span class="op">-</span>stack<span class="ot">=</span><span class="dt">N</span> to increase stack size to <span class="dt">N</span></a>
+<a class="sourceLine" id="cb54-4" title="4"><span class="ot">      co ::</span> c18 <span class="op">~</span> <span class="dt">Vec</span> c19</a>
+<a class="sourceLine" id="cb54-5" title="5">      <span class="op">$</span><span class="ot">dMul ::</span> <span class="dt">Mul</span> a0 c17 c18</a>
+<a class="sourceLine" id="cb54-6" title="6">      <span class="op">$</span><span class="ot">dMul ::</span> <span class="dt">Mul</span> a0 c16 c17</a>
+<a class="sourceLine" id="cb54-7" title="7">      <span class="op">...</span></a>
+<a class="sourceLine" id="cb54-8" title="8">      <span class="op">$</span><span class="ot">dMul ::</span> <span class="dt">Mul</span> a0 c1 c2</a>
+<a class="sourceLine" id="cb54-9" title="9">      <span class="op">$</span><span class="ot">dMul ::</span> <span class="dt">Mul</span> a0 c c1</a>
+<a class="sourceLine" id="cb54-10" title="10">      <span class="op">$</span><span class="ot">dMul ::</span> <span class="dt">Mul</span> a0 c0 c</a>
+<a class="sourceLine" id="cb54-11" title="11">      <span class="op">$</span><span class="ot">dMul ::</span> <span class="dt">Mul</span> a0 (<span class="dt">Vec</span> c0) c0</a>
+<a class="sourceLine" id="cb54-12" title="12">    <span class="dt">When</span> using functional dependencies to combine</a>
+<a class="sourceLine" id="cb54-13" title="13">      <span class="dt">Mul</span> a (<span class="dt">Vec</span> b) (<span class="dt">Vec</span> c),</a>
+<a class="sourceLine" id="cb54-14" title="14">        arising from the dependency <span class="ot">`a b -&gt; c&#39;</span></a>
+<a class="sourceLine" id="cb54-15" title="15"><span class="ot">        in the instance declaration at 3/Mul1.hs:13:10</span></a>
+<a class="sourceLine" id="cb54-16" title="16"><span class="ot">      Mul a0 (Vec c18) c18,</span></a>
+<a class="sourceLine" id="cb54-17" title="17"><span class="ot">        arising from a use of `</span>mul&#39; at <span class="dv">3</span><span class="op">/</span>Mul1.hs<span class="op">:</span><span class="dv">16</span><span class="op">:</span><span class="dv">21</span><span class="op">-</span><span class="dv">23</span></a>
+<a class="sourceLine" id="cb54-18" title="18">    <span class="dt">In</span> the expression<span class="op">:</span> mul x (<span class="dt">Vec</span> [y])</a>
+<a class="sourceLine" id="cb54-19" title="19">    <span class="dt">In</span> the expression<span class="op">:</span> <span class="kw">if</span> b <span class="kw">then</span> mul x (<span class="dt">Vec</span> [y]) <span class="kw">else</span> y</a></code></pre></div>
 <p>(we need to use UndecidableInstances, to make GHC try - this example shows what is ‘Undecidable’).</p>
 <h1 id="type-families">Type families</h1>
 <p>Type families are functions on types</p>
-<div class="sourceCode" id="cb52"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb52-1" title="1"><span class="ot">{-# TypeFamilies #-}</span></a>
-<a class="sourceLine" id="cb52-2" title="2"></a>
-<a class="sourceLine" id="cb52-3" title="3"><span class="kw">data</span> <span class="dt">Zero</span> <span class="ot">=</span> <span class="dt">Zero</span></a>
-<a class="sourceLine" id="cb52-4" title="4"><span class="kw">data</span> <span class="dt">Suc</span> n <span class="ot">=</span> <span class="dt">Suc</span> n</a>
-<a class="sourceLine" id="cb52-5" title="5"></a>
-<a class="sourceLine" id="cb52-6" title="6"><span class="kw">type</span> <span class="kw">family</span> m <span class="op">:+</span> n</a>
-<a class="sourceLine" id="cb52-7" title="7"><span class="kw">type</span> <span class="kw">instance</span> <span class="dt">Zero</span> <span class="op">:+</span> n <span class="ot">=</span> n</a>
-<a class="sourceLine" id="cb52-8" title="8"><span class="kw">type</span> <span class="kw">instance</span> (<span class="dt">Suc</span> m) <span class="op">:+</span> n <span class="ot">=</span> <span class="dt">Suc</span>(m<span class="op">:+</span>n)</a>
-<a class="sourceLine" id="cb52-9" title="9"></a>
-<a class="sourceLine" id="cb52-10" title="10"><span class="ot">vhead ::</span> <span class="dt">Vec</span> (<span class="dt">Suc</span> n) a <span class="ot">-&gt;</span> a</a>
-<a class="sourceLine" id="cb52-11" title="11"><span class="ot">vappend ::</span> <span class="dt">Vec</span> m a <span class="ot">-&gt;</span> <span class="dt">Vec</span> n a <span class="ot">-&gt;</span> <span class="dt">Vec</span> (m<span class="op">:+</span>n) a</a></code></pre></div>
+<div class="sourceCode" id="cb55"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb55-1" title="1"><span class="ot">{-# TypeFamilies #-}</span></a>
+<a class="sourceLine" id="cb55-2" title="2"></a>
+<a class="sourceLine" id="cb55-3" title="3"><span class="kw">data</span> <span class="dt">Zero</span> <span class="ot">=</span> <span class="dt">Zero</span></a>
+<a class="sourceLine" id="cb55-4" title="4"><span class="kw">data</span> <span class="dt">Suc</span> n <span class="ot">=</span> <span class="dt">Suc</span> n</a>
+<a class="sourceLine" id="cb55-5" title="5"></a>
+<a class="sourceLine" id="cb55-6" title="6"><span class="kw">type</span> <span class="kw">family</span> m <span class="op">:+</span> n</a>
+<a class="sourceLine" id="cb55-7" title="7"><span class="kw">type</span> <span class="kw">instance</span> <span class="dt">Zero</span> <span class="op">:+</span> n <span class="ot">=</span> n</a>
+<a class="sourceLine" id="cb55-8" title="8"><span class="kw">type</span> <span class="kw">instance</span> (<span class="dt">Suc</span> m) <span class="op">:+</span> n <span class="ot">=</span> <span class="dt">Suc</span>(m<span class="op">:+</span>n)</a>
+<a class="sourceLine" id="cb55-9" title="9"></a>
+<a class="sourceLine" id="cb55-10" title="10"><span class="ot">vhead ::</span> <span class="dt">Vec</span> (<span class="dt">Suc</span> n) a <span class="ot">-&gt;</span> a</a>
+<a class="sourceLine" id="cb55-11" title="11"><span class="ot">vappend ::</span> <span class="dt">Vec</span> m a <span class="ot">-&gt;</span> <span class="dt">Vec</span> n a <span class="ot">-&gt;</span> <span class="dt">Vec</span> (m<span class="op">:+</span>n) a</a></code></pre></div>
 <p>We’ll talk about them systematically when we talk about dependent types in Haskell</p>
 </body>
 </html>
