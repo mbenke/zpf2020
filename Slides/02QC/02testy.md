@@ -241,10 +241,6 @@ Main ingredients:
 
 ~~~~ {.haskell}
 quickCheck  :: Testable a => a -> IO ()
-quickCheck   = check quick
-
-check :: Testable a => Config -> a -> IO ()
-quick :: Config
 
 class Testable a where
   property :: a -> Property
@@ -324,11 +320,12 @@ $$ \sum_{n=0}^\infty {n\over 2^{n+1}} = 1 $$
 
 ~~~~ {.haskell}
 frequency :: [(Int, Gen a)] -> Gen a
+
 instance Arbitrary a => Arbitrary [a] where
-    arbitrary = frequency
-        [ (1, return [])
-	    , (4, liftM2 (:) arbitrary arbitrary])
-		]
+  arbitrary = frequency
+    [ (1, return [])
+    , (4, liftM2 (:) arbitrary arbitrary)
+    ]
 
 data Tree a = Leaf a | Branch (Tree a) (Tree a)
 instance Arbitrary a => Arbitrary (Tree a) where
@@ -765,7 +762,7 @@ prop_AddCom3 x y = x + y == y + x
 prop_Mul1 :: Int -> Property
 prop_Mul1 x = (x>0) ==> (2*x > 0)
 
-return []  -- tells TH to typechieck definitions above and insert an empty decl list
+return []  -- tells TH to typecheck definitions above and insert an empty decl list
 runTests = $quickCheckAll
 
 main = runTests

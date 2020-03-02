@@ -266,23 +266,19 @@ True
 <p>For simplicity, let’s look at QC v1</p>
 <p>Main ingredients:</p>
 <div class="sourceCode" id="cb18"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb18-1" title="1"><span class="ot">quickCheck  ::</span> <span class="dt">Testable</span> a <span class="ot">=&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">IO</span> ()</a>
-<a class="sourceLine" id="cb18-2" title="2">quickCheck   <span class="ot">=</span> check quick</a>
-<a class="sourceLine" id="cb18-3" title="3"></a>
-<a class="sourceLine" id="cb18-4" title="4"><span class="ot">check ::</span> <span class="dt">Testable</span> a <span class="ot">=&gt;</span> <span class="dt">Config</span> <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">IO</span> ()</a>
-<a class="sourceLine" id="cb18-5" title="5"><span class="ot">quick ::</span> <span class="dt">Config</span></a>
-<a class="sourceLine" id="cb18-6" title="6"></a>
-<a class="sourceLine" id="cb18-7" title="7"><span class="kw">class</span> <span class="dt">Testable</span> a <span class="kw">where</span></a>
-<a class="sourceLine" id="cb18-8" title="8"><span class="ot">  property ::</span> a <span class="ot">-&gt;</span> <span class="dt">Property</span></a>
-<a class="sourceLine" id="cb18-9" title="9"></a>
-<a class="sourceLine" id="cb18-10" title="10"><span class="kw">instance</span> <span class="dt">Testable</span> <span class="dt">Bool</span> <span class="kw">where</span><span class="op">...</span></a>
-<a class="sourceLine" id="cb18-11" title="11"></a>
-<a class="sourceLine" id="cb18-12" title="12"><span class="kw">instance</span> (<span class="dt">Arbitrary</span> a, <span class="dt">Show</span> a, <span class="dt">Testable</span> b) <span class="ot">=&gt;</span> <span class="dt">Testable</span> (a <span class="ot">-&gt;</span> b) <span class="kw">where</span></a>
-<a class="sourceLine" id="cb18-13" title="13">  property f <span class="ot">=</span> forAll arbitrary f</a>
-<a class="sourceLine" id="cb18-14" title="14"></a>
-<a class="sourceLine" id="cb18-15" title="15"><span class="kw">class</span> <span class="dt">Arbitrary</span> a <span class="kw">where</span></a>
-<a class="sourceLine" id="cb18-16" title="16"><span class="ot">  arbitrary   ::</span> <span class="dt">Gen</span> a</a>
-<a class="sourceLine" id="cb18-17" title="17"></a>
-<a class="sourceLine" id="cb18-18" title="18"><span class="kw">instance</span> <span class="dt">Monad</span> <span class="dt">Gen</span> <span class="kw">where</span> <span class="op">...</span></a></code></pre></div>
+<a class="sourceLine" id="cb18-2" title="2"></a>
+<a class="sourceLine" id="cb18-3" title="3"><span class="kw">class</span> <span class="dt">Testable</span> a <span class="kw">where</span></a>
+<a class="sourceLine" id="cb18-4" title="4"><span class="ot">  property ::</span> a <span class="ot">-&gt;</span> <span class="dt">Property</span></a>
+<a class="sourceLine" id="cb18-5" title="5"></a>
+<a class="sourceLine" id="cb18-6" title="6"><span class="kw">instance</span> <span class="dt">Testable</span> <span class="dt">Bool</span> <span class="kw">where</span><span class="op">...</span></a>
+<a class="sourceLine" id="cb18-7" title="7"></a>
+<a class="sourceLine" id="cb18-8" title="8"><span class="kw">instance</span> (<span class="dt">Arbitrary</span> a, <span class="dt">Show</span> a, <span class="dt">Testable</span> b) <span class="ot">=&gt;</span> <span class="dt">Testable</span> (a <span class="ot">-&gt;</span> b) <span class="kw">where</span></a>
+<a class="sourceLine" id="cb18-9" title="9">  property f <span class="ot">=</span> forAll arbitrary f</a>
+<a class="sourceLine" id="cb18-10" title="10"></a>
+<a class="sourceLine" id="cb18-11" title="11"><span class="kw">class</span> <span class="dt">Arbitrary</span> a <span class="kw">where</span></a>
+<a class="sourceLine" id="cb18-12" title="12"><span class="ot">  arbitrary   ::</span> <span class="dt">Gen</span> a</a>
+<a class="sourceLine" id="cb18-13" title="13"></a>
+<a class="sourceLine" id="cb18-14" title="14"><span class="kw">instance</span> <span class="dt">Monad</span> <span class="dt">Gen</span> <span class="kw">where</span> <span class="op">...</span></a></code></pre></div>
 </div>
 <div id="random-number-generation" class="slide section level1">
 <h1>Random number generation</h1>
@@ -337,21 +333,22 @@ True
 <div id="adjusting-distribution" class="slide section level1">
 <h1>Adjusting distribution:</h1>
 <div class="sourceCode" id="cb22"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb22-1" title="1"><span class="ot">frequency ::</span> [(<span class="dt">Int</span>, <span class="dt">Gen</span> a)] <span class="ot">-&gt;</span> <span class="dt">Gen</span> a</a>
-<a class="sourceLine" id="cb22-2" title="2"><span class="kw">instance</span> <span class="dt">Arbitrary</span> a <span class="ot">=&gt;</span> <span class="dt">Arbitrary</span> [a] <span class="kw">where</span></a>
-<a class="sourceLine" id="cb22-3" title="3">    arbitrary <span class="ot">=</span> frequency</a>
-<a class="sourceLine" id="cb22-4" title="4">        [ (<span class="dv">1</span>, <span class="fu">return</span> [])</a>
-<a class="sourceLine" id="cb22-5" title="5">        , (<span class="dv">4</span>, liftM2 (<span class="op">:</span>) arbitrary arbitrary])</a>
-<a class="sourceLine" id="cb22-6" title="6">        ]</a>
-<a class="sourceLine" id="cb22-7" title="7"></a>
-<a class="sourceLine" id="cb22-8" title="8"><span class="kw">data</span> <span class="dt">Tree</span> a <span class="ot">=</span> <span class="dt">Leaf</span> a <span class="op">|</span> <span class="dt">Branch</span> (<span class="dt">Tree</span> a) (<span class="dt">Tree</span> a)</a>
-<a class="sourceLine" id="cb22-9" title="9"><span class="kw">instance</span> <span class="dt">Arbitrary</span> a <span class="ot">=&gt;</span> <span class="dt">Arbitrary</span> (<span class="dt">Tree</span> a) <span class="kw">where</span></a>
-<a class="sourceLine" id="cb22-10" title="10">    arbitrary <span class="ot">=</span> frequency</a>
-<a class="sourceLine" id="cb22-11" title="11">        [(<span class="dv">1</span>, liftM <span class="dt">Leaf</span> arbitrary)</a>
-<a class="sourceLine" id="cb22-12" title="12">        ,(<span class="dv">2</span>, liftM2 <span class="dt">Branch</span> arbitrary arbitrary)</a>
-<a class="sourceLine" id="cb22-13" title="13">        ]</a>
-<a class="sourceLine" id="cb22-14" title="14"></a>
-<a class="sourceLine" id="cb22-15" title="15"><span class="ot">threetrees ::</span> <span class="dt">Gen</span> [<span class="dt">Tree</span> <span class="dt">Int</span>]</a>
-<a class="sourceLine" id="cb22-16" title="16">threetrees <span class="ot">=</span> <span class="fu">sequence</span> [arbitrary, arbitrary, arbitrary]</a></code></pre></div>
+<a class="sourceLine" id="cb22-2" title="2"></a>
+<a class="sourceLine" id="cb22-3" title="3"><span class="kw">instance</span> <span class="dt">Arbitrary</span> a <span class="ot">=&gt;</span> <span class="dt">Arbitrary</span> [a] <span class="kw">where</span></a>
+<a class="sourceLine" id="cb22-4" title="4">  arbitrary <span class="ot">=</span> frequency</a>
+<a class="sourceLine" id="cb22-5" title="5">    [ (<span class="dv">1</span>, <span class="fu">return</span> [])</a>
+<a class="sourceLine" id="cb22-6" title="6">    , (<span class="dv">4</span>, liftM2 (<span class="op">:</span>) arbitrary arbitrary)</a>
+<a class="sourceLine" id="cb22-7" title="7">    ]</a>
+<a class="sourceLine" id="cb22-8" title="8"></a>
+<a class="sourceLine" id="cb22-9" title="9"><span class="kw">data</span> <span class="dt">Tree</span> a <span class="ot">=</span> <span class="dt">Leaf</span> a <span class="op">|</span> <span class="dt">Branch</span> (<span class="dt">Tree</span> a) (<span class="dt">Tree</span> a)</a>
+<a class="sourceLine" id="cb22-10" title="10"><span class="kw">instance</span> <span class="dt">Arbitrary</span> a <span class="ot">=&gt;</span> <span class="dt">Arbitrary</span> (<span class="dt">Tree</span> a) <span class="kw">where</span></a>
+<a class="sourceLine" id="cb22-11" title="11">    arbitrary <span class="ot">=</span> frequency</a>
+<a class="sourceLine" id="cb22-12" title="12">        [(<span class="dv">1</span>, liftM <span class="dt">Leaf</span> arbitrary)</a>
+<a class="sourceLine" id="cb22-13" title="13">        ,(<span class="dv">2</span>, liftM2 <span class="dt">Branch</span> arbitrary arbitrary)</a>
+<a class="sourceLine" id="cb22-14" title="14">        ]</a>
+<a class="sourceLine" id="cb22-15" title="15"></a>
+<a class="sourceLine" id="cb22-16" title="16"><span class="ot">threetrees ::</span> <span class="dt">Gen</span> [<span class="dt">Tree</span> <span class="dt">Int</span>]</a>
+<a class="sourceLine" id="cb22-17" title="17">threetrees <span class="ot">=</span> <span class="fu">sequence</span> [arbitrary, arbitrary, arbitrary]</a></code></pre></div>
 <p>what is the probability that generating 3 trees ever stops?</p>
 <!---
 

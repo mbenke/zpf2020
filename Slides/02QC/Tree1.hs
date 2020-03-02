@@ -7,8 +7,8 @@ data Tree a = Leaf a | Branch (Tree a) (Tree a)
 
 instance Arbitrary a => Arbitrary (Tree a) where
     arbitrary = frequency
-        [(1, liftM Leaf arbitrary)
-        ,(2, liftM2 Branch arbitrary arbitrary)
+        [(1, Leaf <$> arbitrary)
+        ,(2, Branch <$> arbitrary <*> arbitrary)
         ]
 
 atree :: Gen (Tree Int)
