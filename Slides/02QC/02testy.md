@@ -11,7 +11,8 @@ date: Mar 3, 2020
 * HUnit
 * Quickcheck
 * QuickCheck + doctest
-* Hedgehog [github: hedgehogqa/haskell-hedgehog](https://github.com/hedgehogqa/haskell-hedgehog)
+<!-- * Hedgehog [github: hedgehogqa/haskell-hedgehog](https://github.com/hedgehogqa/haskell-hedgehog)
+-->
 
 # doctest
 
