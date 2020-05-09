@@ -125,7 +125,7 @@ x = _</code></pre>
 <div id="sharing" class="slide section level1">
 <h1>Sharing</h1>
 <pre><code>&gt; let y = (x,x)
-&gt; :sprint vv
+&gt; :sprint y
 y = (_,_)
 &gt; fst y
 3
@@ -153,15 +153,80 @@ y = 4
 x = 3</code></pre>
 <p><code>seq a b</code> <em>sequentially</em> evaluates <code>a</code> then returns <code>b</code> (without forcing it)</p>
 </div>
+<div id="whnf---shallow-evaluation" class="slide section level1">
+<h1>WHNF - shallow evaluation</h1>
+<p><code>seq</code> evaluates to so called Weak Head Normal Form - more or less up to first constructor:</p>
+<pre><code>Prelude&gt; let xs = map (+1) [1..10] :: [Int]
+Prelude&gt; :sprint xs
+xs = _
+Prelude&gt; seq xs ()
+()
+Prelude&gt; :sprint xs
+xs = _ : _</code></pre>
+<p>BTW, similar thing happens when evaluatning <code>case</code>:</p>
+<pre><code>Prelude&gt; let xs = map (+1) [1..10] :: [Int]
+Prelude&gt; case xs of { [] -&gt; (); _:_ -&gt; () }
+()
+Prelude&gt; :sprint xs
+xs = _ : _</code></pre>
+<p>We will discuss deep evaluation (normal form) later.</p>
+</div>
+<div id="the-eval-monad---computation-strategies" class="slide section level1">
+<h1>The <code>Eval</code> monad - computation strategies</h1>
+<div class="sourceCode" id="cb6"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb6-1" title="1"><span class="co">-- Control.Parallel.Strategies</span></a>
+<a class="sourceLine" id="cb6-2" title="2"><span class="kw">data</span> <span class="dt">Eval</span> a</a>
+<a class="sourceLine" id="cb6-3" title="3"><span class="kw">instance</span> <span class="dt">Monad</span> <span class="dt">Eval</span></a>
+<a class="sourceLine" id="cb6-4" title="4"></a>
+<a class="sourceLine" id="cb6-5" title="5"><span class="ot">runEval ::</span> <span class="dt">Eval</span> a <span class="ot">-&gt;</span> a</a>
+<a class="sourceLine" id="cb6-6" title="6"><span class="ot">rseq ::</span> a <span class="ot">-&gt;</span> <span class="dt">Eval</span> a  <span class="co">-- &quot;in this thread&quot;</span></a>
+<a class="sourceLine" id="cb6-7" title="7"><span class="ot">rpar ::</span> a <span class="ot">-&gt;</span> <span class="dt">Eval</span> a  <span class="co">--  &quot;in a new thread&quot;</span></a></code></pre></div>
+<p>Calling a lazy function in a new thread does not have much sense (why?)</p>
+<p>We need to control the evaluation somehow.</p>
+</div>
+<div id="deepseq-friends" class="slide section level1">
+<h1>deepseq &amp; friends</h1>
+<p>deepseq: fully evaluates the first argument, before returning the second.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb7-1" title="1"><span class="fu">seq</span><span class="ot"> ::</span> a <span class="ot">-&gt;</span> b <span class="ot">-&gt;</span> b</a>
+<a class="sourceLine" id="cb7-2" title="2"><span class="co">-- Control.DeepSeq</span></a>
+<a class="sourceLine" id="cb7-3" title="3"><span class="kw">class</span> <span class="dt">NFData</span> a <span class="kw">where</span></a>
+<a class="sourceLine" id="cb7-4" title="4"><span class="ot">    rnf ::</span> a <span class="ot">-&gt;</span> ()</a>
+<a class="sourceLine" id="cb7-5" title="5"><span class="co">-- rnf should reduce its argument to normal form</span></a>
+<a class="sourceLine" id="cb7-6" title="6"><span class="co">-- (that is, fully evaluate all sub-components),</span></a>
+<a class="sourceLine" id="cb7-7" title="7"><span class="co">-- and then return &#39;()&#39;</span></a>
+<a class="sourceLine" id="cb7-8" title="8"></a>
+<a class="sourceLine" id="cb7-9" title="9"><span class="co">-- Default implementation</span></a>
+<a class="sourceLine" id="cb7-10" title="10">    rnf a <span class="ot">=</span> a <span class="ot">`seq`</span> ()</a>
+<a class="sourceLine" id="cb7-11" title="11"></a>
+<a class="sourceLine" id="cb7-12" title="12"><span class="ot">deepseq ::</span> <span class="dt">NFData</span> a <span class="ot">=&gt;</span> a <span class="ot">-&gt;</span> b <span class="ot">-&gt;</span> b</a>
+<a class="sourceLine" id="cb7-13" title="13">deepseq a b <span class="ot">=</span> rnf a <span class="ot">`seq`</span> b</a>
+<a class="sourceLine" id="cb7-14" title="14"></a>
+<a class="sourceLine" id="cb7-15" title="15"><span class="ot">force ::</span>  <span class="dt">NFData</span> a <span class="ot">=&gt;</span> a <span class="ot">-&gt;</span> a</a>
+<a class="sourceLine" id="cb7-16" title="16">force x <span class="ot">=</span> deepseq x x</a>
+<a class="sourceLine" id="cb7-17" title="17"></a>
+<a class="sourceLine" id="cb7-18" title="18"><span class="co">-- Control.Exception</span></a>
+<a class="sourceLine" id="cb7-19" title="19"><span class="co">-- Forces its argument to be evaluated to weak head normal form</span></a>
+<a class="sourceLine" id="cb7-20" title="20"><span class="co">-- when the resultant IO action is executed.</span></a>
+<a class="sourceLine" id="cb7-21" title="21"><span class="ot">evaluate ::</span> a <span class="ot">-&gt;</span> <span class="dt">IO</span> a</a></code></pre></div>
+</div>
+<div id="deepseq-friends-1" class="slide section level1">
+<h1>deepseq &amp; friends</h1>
+<p><code>seq</code> forces ``shallow’’ evaluation (just the root)</p>
+<p><code>deepseq</code> forces the whole tree up to the leaves.</p>
+<pre><code>&gt; let x = [undefined] :: [Int] in x `seq` length x
+1
+
+&gt; let x = [undefined] :: [Int] in x `deepseq` length x
+*** Exception: Prelude.undefined</code></pre>
+</div>
 <div id="sudoku" class="slide section level1">
 <h1>Sudoku</h1>
 <p>An example with lots of computation: solving Sudoku</p>
 <p>Every line of input contains an instance of the problem</p>
 <p>Sequential program:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb4-1" title="1">main <span class="ot">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb4-2" title="2">    [f] <span class="ot">&lt;-</span> getArgs</a>
-<a class="sourceLine" id="cb4-3" title="3">    grids <span class="ot">&lt;-</span> <span class="fu">fmap</span> <span class="fu">lines</span> <span class="op">$</span> <span class="fu">readFile</span> f</a>
-<a class="sourceLine" id="cb4-4" title="4">    <span class="fu">mapM_</span> (evaluate <span class="op">.</span> solve) grids</a></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb9-1" title="1">main <span class="ot">=</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb9-2" title="2">    [f] <span class="ot">&lt;-</span> getArgs</a>
+<a class="sourceLine" id="cb9-3" title="3">    grids <span class="ot">&lt;-</span> <span class="fu">fmap</span> <span class="fu">lines</span> <span class="op">$</span> <span class="fu">readFile</span> f</a>
+<a class="sourceLine" id="cb9-4" title="4">    <span class="fu">mapM_</span> (evaluate <span class="op">.</span> solve) grids</a></code></pre></div>
 <pre><code>$ ghc -O2 -threaded --make sudoku1.hs
 $ ./sudoku1 sudoku17.1000.txt +RTS -s
   TASKS: 3 (1 bound, 2 peak workers (2 total), using -N1)
@@ -189,68 +254,21 @@ $ ./sudoku1 sudoku17.1000.txt +RTS -s
   Productivity  51.8% of total user, 213.1% of total elapsed</code></pre>
 <p>Our program works slower - we unnecessarily start N-1 additional threads that only get in the way.</p>
 </div>
-<div id="the-eval-monad---computation-strategies" class="slide section level1">
-<h1>The <code>Eval</code> monad - computation strategies</h1>
-<div class="sourceCode" id="cb8"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb8-1" title="1"><span class="co">-- Control.Parallel.Strategies</span></a>
-<a class="sourceLine" id="cb8-2" title="2"><span class="kw">data</span> <span class="dt">Eval</span> a</a>
-<a class="sourceLine" id="cb8-3" title="3"><span class="kw">instance</span> <span class="dt">Monad</span> <span class="dt">Eval</span></a>
-<a class="sourceLine" id="cb8-4" title="4"></a>
-<a class="sourceLine" id="cb8-5" title="5"><span class="ot">runEval ::</span> <span class="dt">Eval</span> a <span class="ot">-&gt;</span> a</a>
-<a class="sourceLine" id="cb8-6" title="6"><span class="ot">rseq ::</span> a <span class="ot">-&gt;</span> <span class="dt">Eval</span> a  <span class="co">-- &quot;in this thread&quot;</span></a>
-<a class="sourceLine" id="cb8-7" title="7"><span class="ot">rpar ::</span> a <span class="ot">-&gt;</span> <span class="dt">Eval</span> a  <span class="co">--  &quot;in a new thread&quot;</span></a></code></pre></div>
-<p>Calling a lazy function in a new thread does not have much sense (why?)</p>
-<p>We need to control the evaluation somehow.</p>
-</div>
-<div id="deepseq-friends" class="slide section level1">
-<h1>deepseq &amp; friends</h1>
-<p>deepseq: fully evaluates the first argument, before returning the second.</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb9-1" title="1"><span class="fu">seq</span><span class="ot"> ::</span> a <span class="ot">-&gt;</span> b <span class="ot">-&gt;</span> b</a>
-<a class="sourceLine" id="cb9-2" title="2"><span class="co">-- Control.DeepSeq</span></a>
-<a class="sourceLine" id="cb9-3" title="3"><span class="kw">class</span> <span class="dt">NFData</span> a <span class="kw">where</span></a>
-<a class="sourceLine" id="cb9-4" title="4"><span class="ot">    rnf ::</span> a <span class="ot">-&gt;</span> ()</a>
-<a class="sourceLine" id="cb9-5" title="5"><span class="co">-- rnf should reduce its argument to normal form</span></a>
-<a class="sourceLine" id="cb9-6" title="6"><span class="co">-- (that is, fully evaluate all sub-components),</span></a>
-<a class="sourceLine" id="cb9-7" title="7"><span class="co">-- and then return &#39;()&#39;</span></a>
-<a class="sourceLine" id="cb9-8" title="8"></a>
-<a class="sourceLine" id="cb9-9" title="9"><span class="co">-- Default implementation</span></a>
-<a class="sourceLine" id="cb9-10" title="10">    rnf a <span class="ot">=</span> a <span class="ot">`seq`</span> ()</a>
-<a class="sourceLine" id="cb9-11" title="11"></a>
-<a class="sourceLine" id="cb9-12" title="12"><span class="ot">deepseq ::</span> <span class="dt">NFData</span> a <span class="ot">=&gt;</span> a <span class="ot">-&gt;</span> b <span class="ot">-&gt;</span> b</a>
-<a class="sourceLine" id="cb9-13" title="13">deepseq a b <span class="ot">=</span> rnf a <span class="ot">`seq`</span> b</a>
-<a class="sourceLine" id="cb9-14" title="14"></a>
-<a class="sourceLine" id="cb9-15" title="15"><span class="ot">force ::</span>  <span class="dt">NFData</span> a <span class="ot">=&gt;</span> a <span class="ot">-&gt;</span> a</a>
-<a class="sourceLine" id="cb9-16" title="16">force x <span class="ot">=</span> deepseq x x</a>
-<a class="sourceLine" id="cb9-17" title="17"></a>
-<a class="sourceLine" id="cb9-18" title="18"><span class="co">-- Control.Exception</span></a>
-<a class="sourceLine" id="cb9-19" title="19"><span class="co">-- Forces its argument to be evaluated to weak head normal form</span></a>
-<a class="sourceLine" id="cb9-20" title="20"><span class="co">-- when the resultant IO action is executed.</span></a>
-<a class="sourceLine" id="cb9-21" title="21"><span class="ot">evaluate ::</span> a <span class="ot">-&gt;</span> <span class="dt">IO</span> a</a></code></pre></div>
-</div>
-<div id="deepseq-friends-1" class="slide section level1">
-<h1>deepseq &amp; friends</h1>
-<p><code>seq</code> forces ``shallow’’ evaluation (just the root)</p>
-<p><code>deepseq</code> forces the whole tree up to the leaves.</p>
-<pre><code>&gt; let x = [undefined] :: [Int] in x `seq` length x
-1
-
-&gt; let x = [undefined] :: [Int] in x `deepseq` length x
-*** Exception: Prelude.undefined</code></pre>
-</div>
 <div id="a-parallel-program" class="slide section level1">
 <h1>A parallel program</h1>
-<div class="sourceCode" id="cb11"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb11-1" title="1"><span class="kw">import</span> <span class="dt">Control.Parallel.Strategies</span>  <span class="co">-- cabal install parallel</span></a>
-<a class="sourceLine" id="cb11-2" title="2"><span class="ot">main ::</span> <span class="dt">IO</span> ()</a>
-<a class="sourceLine" id="cb11-3" title="3">main <span class="ot">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb11-4" title="4">    [f] <span class="ot">&lt;-</span> getArgs</a>
-<a class="sourceLine" id="cb11-5" title="5">    grids <span class="ot">&lt;-</span> <span class="fu">fmap</span> <span class="fu">lines</span> <span class="op">$</span> <span class="fu">readFile</span> f</a>
-<a class="sourceLine" id="cb11-6" title="6">    <span class="co">-- print (length (filter isJust (map solve grids)))</span></a>
-<a class="sourceLine" id="cb11-7" title="7">    <span class="kw">let</span> (as,bs) <span class="ot">=</span> <span class="fu">splitAt</span> (<span class="fu">length</span> grids <span class="ot">`div`</span> <span class="dv">2</span>) grids</a>
-<a class="sourceLine" id="cb11-8" title="8">    <span class="fu">print</span> (<span class="fu">length</span> (runEval (work as bs)))</a>
-<a class="sourceLine" id="cb11-9" title="9"></a>
-<a class="sourceLine" id="cb11-10" title="10">work as bs <span class="ot">=</span>  <span class="kw">do</span></a>
-<a class="sourceLine" id="cb11-11" title="11">       a <span class="ot">&lt;-</span> rpar (force (<span class="fu">map</span> solve as))</a>
-<a class="sourceLine" id="cb11-12" title="12">       b <span class="ot">&lt;-</span> rpar (force (<span class="fu">map</span> solve bs))</a>
-<a class="sourceLine" id="cb11-13" title="13">       <span class="fu">return</span> (<span class="fu">filter</span> isJust (a<span class="op">++</span>b))</a></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb13-1" title="1"><span class="kw">import</span> <span class="dt">Control.Parallel.Strategies</span>  <span class="co">-- cabal install parallel</span></a>
+<a class="sourceLine" id="cb13-2" title="2"><span class="ot">main ::</span> <span class="dt">IO</span> ()</a>
+<a class="sourceLine" id="cb13-3" title="3">main <span class="ot">=</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb13-4" title="4">    [f] <span class="ot">&lt;-</span> getArgs</a>
+<a class="sourceLine" id="cb13-5" title="5">    grids <span class="ot">&lt;-</span> <span class="fu">fmap</span> <span class="fu">lines</span> <span class="op">$</span> <span class="fu">readFile</span> f</a>
+<a class="sourceLine" id="cb13-6" title="6">    <span class="co">-- print (length (filter isJust (map solve grids)))</span></a>
+<a class="sourceLine" id="cb13-7" title="7">    <span class="kw">let</span> (as,bs) <span class="ot">=</span> <span class="fu">splitAt</span> (<span class="fu">length</span> grids <span class="ot">`div`</span> <span class="dv">2</span>) grids</a>
+<a class="sourceLine" id="cb13-8" title="8">    <span class="fu">print</span> (<span class="fu">length</span> (runEval (work as bs)))</a>
+<a class="sourceLine" id="cb13-9" title="9"></a>
+<a class="sourceLine" id="cb13-10" title="10">work as bs <span class="ot">=</span>  <span class="kw">do</span></a>
+<a class="sourceLine" id="cb13-11" title="11">       a <span class="ot">&lt;-</span> rpar (force (<span class="fu">map</span> solve as))</a>
+<a class="sourceLine" id="cb13-12" title="12">       b <span class="ot">&lt;-</span> rpar (force (<span class="fu">map</span> solve bs))</a>
+<a class="sourceLine" id="cb13-13" title="13">       <span class="fu">return</span> (<span class="fu">filter</span> isJust (a<span class="op">++</span>b))</a></code></pre></div>
 <p>We create two light threads, in GHC called ``sparks’’ (these are not OS threads).</p>
 </div>
 <div id="results" class="slide section level1">
@@ -329,14 +347,14 @@ $ ~/.cabal/bin/threadscope sudoku2.eventlog &amp;</code></pre>
 <div id="dynamic-work-allocation" class="slide section level1">
 <h1>Dynamic work allocation</h1>
 <p>Parallel map: process list elements in parallel</p>
-<div class="sourceCode" id="cb16"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb16-1" title="1"><span class="ot">parMap ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> <span class="dt">Eval</span> [b]</a>
-<a class="sourceLine" id="cb16-2" title="2">parMap f [] <span class="ot">=</span> <span class="fu">return</span> []</a>
-<a class="sourceLine" id="cb16-3" title="3">parMap f (a<span class="op">:</span>as) <span class="ot">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb16-4" title="4">   b <span class="ot">&lt;-</span> rpar (f a)</a>
-<a class="sourceLine" id="cb16-5" title="5">   bs <span class="ot">&lt;-</span> parMap f as</a>
-<a class="sourceLine" id="cb16-6" title="6">   <span class="fu">return</span> (b<span class="op">:</span>bs)</a></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb18-1" title="1"><span class="ot">parMap ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> <span class="dt">Eval</span> [b]</a>
+<a class="sourceLine" id="cb18-2" title="2">parMap f [] <span class="ot">=</span> <span class="fu">return</span> []</a>
+<a class="sourceLine" id="cb18-3" title="3">parMap f (a<span class="op">:</span>as) <span class="ot">=</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb18-4" title="4">   b <span class="ot">&lt;-</span> rpar (f a)</a>
+<a class="sourceLine" id="cb18-5" title="5">   bs <span class="ot">&lt;-</span> parMap f as</a>
+<a class="sourceLine" id="cb18-6" title="6">   <span class="fu">return</span> (b<span class="op">:</span>bs)</a></code></pre></div>
 <p>Evaluation:</p>
-<div class="sourceCode" id="cb17"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb17-1" title="1">    runEval (parMap solve grids) <span class="ot">`deepseq`</span> <span class="fu">return</span> ()</a></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb19-1" title="1">    runEval (parMap solve grids) <span class="ot">`deepseq`</span> <span class="fu">return</span> ()</a></code></pre></div>
 </div>
 <div id="parmap---results" class="slide section level1">
 <h1>parMap - results</h1>
@@ -367,41 +385,41 @@ N32: Productivity  43.5% of total user, 1112.6% of total elapsed</code></pre>
 <div id="strategie" class="slide section level1">
 <h1>Strategie</h1>
 <p>Additional abstraction layer built upon the <code>Eval</code> monad</p>
-<div class="sourceCode" id="cb20"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb20-1" title="1"><span class="kw">type</span> <span class="dt">Strategy</span> a <span class="ot">=</span> a <span class="ot">-&gt;</span> <span class="dt">Eval</span></a>
-<a class="sourceLine" id="cb20-2" title="2"><span class="ot">rseq ::</span> <span class="dt">Strategy</span> a</a>
-<a class="sourceLine" id="cb20-3" title="3"><span class="ot">rpar ::</span> <span class="dt">Strategy</span> a</a>
-<a class="sourceLine" id="cb20-4" title="4"><span class="ot">r0 ::</span> <span class="dt">Strategy</span> a</a>
-<a class="sourceLine" id="cb20-5" title="5">r0 x <span class="ot">=</span> <span class="fu">return</span> x</a>
-<a class="sourceLine" id="cb20-6" title="6"><span class="ot">rdeepseq ::</span> <span class="dt">NFData</span> a <span class="ot">=&gt;</span> <span class="dt">Strategy</span> a</a>
-<a class="sourceLine" id="cb20-7" title="7">rdeepseq <span class="ot">=</span> rseq(deep x)</a>
-<a class="sourceLine" id="cb20-8" title="8"></a>
-<a class="sourceLine" id="cb20-9" title="9"><span class="ot">using ::</span> a <span class="ot">-&gt;</span> <span class="dt">Strategy</span> a <span class="ot">-&gt;</span> a</a>
-<a class="sourceLine" id="cb20-10" title="10">x <span class="ot">`using`</span> s <span class="ot">=</span> runEval (s x)</a></code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb22-1" title="1"><span class="kw">type</span> <span class="dt">Strategy</span> a <span class="ot">=</span> a <span class="ot">-&gt;</span> <span class="dt">Eval</span></a>
+<a class="sourceLine" id="cb22-2" title="2"><span class="ot">rseq ::</span> <span class="dt">Strategy</span> a</a>
+<a class="sourceLine" id="cb22-3" title="3"><span class="ot">rpar ::</span> <span class="dt">Strategy</span> a</a>
+<a class="sourceLine" id="cb22-4" title="4"><span class="ot">r0 ::</span> <span class="dt">Strategy</span> a</a>
+<a class="sourceLine" id="cb22-5" title="5">r0 x <span class="ot">=</span> <span class="fu">return</span> x</a>
+<a class="sourceLine" id="cb22-6" title="6"><span class="ot">rdeepseq ::</span> <span class="dt">NFData</span> a <span class="ot">=&gt;</span> <span class="dt">Strategy</span> a</a>
+<a class="sourceLine" id="cb22-7" title="7">rdeepseq <span class="ot">=</span> rseq(deep x)</a>
+<a class="sourceLine" id="cb22-8" title="8"></a>
+<a class="sourceLine" id="cb22-9" title="9"><span class="ot">using ::</span> a <span class="ot">-&gt;</span> <span class="dt">Strategy</span> a <span class="ot">-&gt;</span> a</a>
+<a class="sourceLine" id="cb22-10" title="10">x <span class="ot">`using`</span> s <span class="ot">=</span> runEval (s x)</a></code></pre></div>
 <p>The advantage is that <code>using s</code> can be removed (almost) without changing semantics (at worst, the program will be ``more defined’’)</p>
 </div>
 <div id="parallel-list-processing" class="slide section level1">
 <h1>Parallel list processing</h1>
-<div class="sourceCode" id="cb21"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb21-1" title="1">parMap f xs <span class="ot">=</span> <span class="fu">map</span> f xs <span class="ot">`using`</span> parList rseq</a>
-<a class="sourceLine" id="cb21-2" title="2"></a>
-<a class="sourceLine" id="cb21-3" title="3"><span class="co">-- Control.Parallel.Strategies</span></a>
-<a class="sourceLine" id="cb21-4" title="4"><span class="ot">parList ::</span> <span class="dt">Strategy</span> a <span class="ot">-&gt;</span> <span class="dt">Strategy</span> [a]</a>
-<a class="sourceLine" id="cb21-5" title="5">parList strat [] <span class="ot">=</span> <span class="fu">return</span> []</a>
-<a class="sourceLine" id="cb21-6" title="6">parList strat (x<span class="op">:</span>xs) <span class="ot">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb21-7" title="7">    x&#39; <span class="ot">&lt;-</span> rpar (x <span class="ot">`using`</span> strat)</a>
-<a class="sourceLine" id="cb21-8" title="8">    xs&#39; <span class="ot">&lt;-</span> parList strat xs</a>
-<a class="sourceLine" id="cb21-9" title="9">    <span class="fu">return</span> (x&#39;<span class="op">:</span>xs)</a></code></pre></div>
+<div class="sourceCode" id="cb23"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb23-1" title="1">parMap f xs <span class="ot">=</span> <span class="fu">map</span> f xs <span class="ot">`using`</span> parList rseq</a>
+<a class="sourceLine" id="cb23-2" title="2"></a>
+<a class="sourceLine" id="cb23-3" title="3"><span class="co">-- Control.Parallel.Strategies</span></a>
+<a class="sourceLine" id="cb23-4" title="4"><span class="ot">parList ::</span> <span class="dt">Strategy</span> a <span class="ot">-&gt;</span> <span class="dt">Strategy</span> [a]</a>
+<a class="sourceLine" id="cb23-5" title="5">parList strat [] <span class="ot">=</span> <span class="fu">return</span> []</a>
+<a class="sourceLine" id="cb23-6" title="6">parList strat (x<span class="op">:</span>xs) <span class="ot">=</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb23-7" title="7">    x&#39; <span class="ot">&lt;-</span> rpar (x <span class="ot">`using`</span> strat)</a>
+<a class="sourceLine" id="cb23-8" title="8">    xs&#39; <span class="ot">&lt;-</span> parList strat xs</a>
+<a class="sourceLine" id="cb23-9" title="9">    <span class="fu">return</span> (x&#39;<span class="op">:</span>xs)</a></code></pre></div>
 </div>
 <div id="cautionary-note" class="slide section level1">
 <h1>Cautionary note</h1>
 <p>Although the sparks are really cheap, one should not create too many of them</p>
-<div class="sourceCode" id="cb22"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb22-1" title="1">parFib n <span class="op">|</span> n <span class="op">&lt;</span> <span class="dv">2</span> <span class="ot">=</span> n</a>
-<a class="sourceLine" id="cb22-2" title="2">parFib n <span class="ot">=</span> p <span class="ot">`par`</span> q <span class="ot">`pseq`</span> (p <span class="op">+</span> q)</a>
-<a class="sourceLine" id="cb22-3" title="3">    <span class="kw">where</span></a>
-<a class="sourceLine" id="cb22-4" title="4">      p <span class="ot">=</span> parFib <span class="op">$</span> n <span class="op">-</span> <span class="dv">1</span></a>
-<a class="sourceLine" id="cb22-5" title="5">      q <span class="ot">=</span> parFib <span class="op">$</span> n <span class="op">-</span> <span class="dv">2</span></a>
-<a class="sourceLine" id="cb22-6" title="6"></a>
-<a class="sourceLine" id="cb22-7" title="7"><span class="ot">main ::</span> <span class="dt">IO</span> ()</a>
-<a class="sourceLine" id="cb22-8" title="8">main <span class="ot">=</span> <span class="fu">print</span> <span class="op">$</span> parFib <span class="dv">40</span></a></code></pre></div>
+<div class="sourceCode" id="cb24"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb24-1" title="1">parFib n <span class="op">|</span> n <span class="op">&lt;</span> <span class="dv">2</span> <span class="ot">=</span> n</a>
+<a class="sourceLine" id="cb24-2" title="2">parFib n <span class="ot">=</span> p <span class="ot">`par`</span> q <span class="ot">`pseq`</span> (p <span class="op">+</span> q)</a>
+<a class="sourceLine" id="cb24-3" title="3">    <span class="kw">where</span></a>
+<a class="sourceLine" id="cb24-4" title="4">      p <span class="ot">=</span> parFib <span class="op">$</span> n <span class="op">-</span> <span class="dv">1</span></a>
+<a class="sourceLine" id="cb24-5" title="5">      q <span class="ot">=</span> parFib <span class="op">$</span> n <span class="op">-</span> <span class="dv">2</span></a>
+<a class="sourceLine" id="cb24-6" title="6"></a>
+<a class="sourceLine" id="cb24-7" title="7"><span class="ot">main ::</span> <span class="dt">IO</span> ()</a>
+<a class="sourceLine" id="cb24-8" title="8">main <span class="ot">=</span> <span class="fu">print</span> <span class="op">$</span> parFib <span class="dv">40</span></a></code></pre></div>
 <pre><code>@azor:
 ./badfib +RTS -N2 -s -RTS
   SPARKS: 165597322 (16 converted, 14860689 overflowed, 0 dud,
@@ -424,17 +442,17 @@ N60:
 </div>
 <div id="better" class="slide section level1">
 <h1>Better</h1>
-<div class="sourceCode" id="cb24"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb24-1" title="1"><span class="ot">cutoff ::</span> <span class="dt">Int</span></a>
-<a class="sourceLine" id="cb24-2" title="2">cutoff <span class="ot">=</span> <span class="dv">20</span></a>
-<a class="sourceLine" id="cb24-3" title="3"></a>
-<a class="sourceLine" id="cb24-4" title="4">parFib n <span class="op">|</span> n <span class="op">&lt;</span> cutoff <span class="ot">=</span> fib n</a>
-<a class="sourceLine" id="cb24-5" title="5">parFib n <span class="ot">=</span> p <span class="ot">`par`</span> q <span class="ot">`pseq`</span> (p <span class="op">+</span> q)</a>
-<a class="sourceLine" id="cb24-6" title="6">    <span class="kw">where</span></a>
-<a class="sourceLine" id="cb24-7" title="7">      p <span class="ot">=</span> parFib <span class="op">$</span> n <span class="op">-</span> <span class="dv">1</span></a>
-<a class="sourceLine" id="cb24-8" title="8">      q <span class="ot">=</span> parFib <span class="op">$</span> n <span class="op">-</span> <span class="dv">2</span></a>
-<a class="sourceLine" id="cb24-9" title="9"></a>
-<a class="sourceLine" id="cb24-10" title="10">fib n <span class="op">|</span> n<span class="op">&lt;</span><span class="dv">2</span> <span class="ot">=</span> n</a>
-<a class="sourceLine" id="cb24-11" title="11">fib n <span class="ot">=</span> fib (n <span class="op">-</span> <span class="dv">1</span>) <span class="op">+</span> fib (n <span class="op">-</span> <span class="dv">2</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb26"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb26-1" title="1"><span class="ot">cutoff ::</span> <span class="dt">Int</span></a>
+<a class="sourceLine" id="cb26-2" title="2">cutoff <span class="ot">=</span> <span class="dv">20</span></a>
+<a class="sourceLine" id="cb26-3" title="3"></a>
+<a class="sourceLine" id="cb26-4" title="4">parFib n <span class="op">|</span> n <span class="op">&lt;</span> cutoff <span class="ot">=</span> fib n</a>
+<a class="sourceLine" id="cb26-5" title="5">parFib n <span class="ot">=</span> p <span class="ot">`par`</span> q <span class="ot">`pseq`</span> (p <span class="op">+</span> q)</a>
+<a class="sourceLine" id="cb26-6" title="6">    <span class="kw">where</span></a>
+<a class="sourceLine" id="cb26-7" title="7">      p <span class="ot">=</span> parFib <span class="op">$</span> n <span class="op">-</span> <span class="dv">1</span></a>
+<a class="sourceLine" id="cb26-8" title="8">      q <span class="ot">=</span> parFib <span class="op">$</span> n <span class="op">-</span> <span class="dv">2</span></a>
+<a class="sourceLine" id="cb26-9" title="9"></a>
+<a class="sourceLine" id="cb26-10" title="10">fib n <span class="op">|</span> n<span class="op">&lt;</span><span class="dv">2</span> <span class="ot">=</span> n</a>
+<a class="sourceLine" id="cb26-11" title="11">fib n <span class="ot">=</span> fib (n <span class="op">-</span> <span class="dv">1</span>) <span class="op">+</span> fib (n <span class="op">-</span> <span class="dv">2</span>)</a></code></pre></div>
 <pre><code>./parfib +RTS -N60 -s -RTS
  SPARKS: 118393 (42619 converted, 0 overflowed, 0 dud,
                  11241 GC&#39;d, 64533 fizzled)
@@ -484,24 +502,24 @@ $ ~/.cabal/bin/threadscope parfib.eventlog</code></pre>
 <li><p>sequential</p></li>
 <li><p>parallel</p></li>
 </ul>
-<div class="sourceCode" id="cb28"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb28-1" title="1"><span class="kw">type</span> <span class="dt">PartialSolution</span> <span class="ot">=</span> [<span class="dt">Int</span>]</a>
-<a class="sourceLine" id="cb28-2" title="2"><span class="kw">type</span> <span class="dt">Solution</span> <span class="ot">=</span> <span class="dt">PartialSolution</span></a>
-<a class="sourceLine" id="cb28-3" title="3"><span class="kw">type</span> <span class="dt">BoardSize</span> <span class="ot">=</span> <span class="dt">Int</span></a>
-<a class="sourceLine" id="cb28-4" title="4"></a>
-<a class="sourceLine" id="cb28-5" title="5"><span class="ot">queens ::</span> <span class="dt">BoardSize</span> <span class="ot">-&gt;</span> [<span class="dt">Solution</span>]</a>
-<a class="sourceLine" id="cb28-6" title="6">queens n <span class="ot">=</span> <span class="fu">iterate</span> (<span class="fu">concatMap</span> (addQueen n)) [[ ]] <span class="op">!!</span> n</a>
-<a class="sourceLine" id="cb28-7" title="7"></a>
-<a class="sourceLine" id="cb28-8" title="8"><span class="ot">addQueen ::</span> <span class="dt">BoardSize</span> <span class="ot">-&gt;</span> <span class="dt">PartialSolution</span> <span class="ot">-&gt;</span> [<span class="dt">PartialSolution</span>]</a>
-<a class="sourceLine" id="cb28-9" title="9">addQueen n s <span class="ot">=</span> [x <span class="op">:</span> s <span class="op">|</span> x <span class="ot">&lt;-</span> [<span class="dv">1</span><span class="op">..</span>n], safe x s <span class="dv">1</span>]</a>
-<a class="sourceLine" id="cb28-10" title="10"></a>
-<a class="sourceLine" id="cb28-11" title="11"><span class="ot">safe ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">PartialSolution</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span></a>
-<a class="sourceLine" id="cb28-12" title="12">safe x [] n <span class="ot">=</span> <span class="dt">True</span></a>
-<a class="sourceLine" id="cb28-13" title="13">safe x (c <span class="op">:</span> y) n <span class="ot">=</span> x <span class="op">/=</span> c <span class="op">&amp;&amp;</span> x <span class="op">/=</span> c <span class="op">+</span> n</a>
-<a class="sourceLine" id="cb28-14" title="14">       <span class="op">&amp;&amp;</span> x <span class="op">/=</span> c <span class="op">-</span> n <span class="op">&amp;&amp;</span> safe x y (n <span class="op">+</span> <span class="dv">1</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb30"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb30-1" title="1"><span class="kw">type</span> <span class="dt">PartialSolution</span> <span class="ot">=</span> [<span class="dt">Int</span>]</a>
+<a class="sourceLine" id="cb30-2" title="2"><span class="kw">type</span> <span class="dt">Solution</span> <span class="ot">=</span> <span class="dt">PartialSolution</span></a>
+<a class="sourceLine" id="cb30-3" title="3"><span class="kw">type</span> <span class="dt">BoardSize</span> <span class="ot">=</span> <span class="dt">Int</span></a>
+<a class="sourceLine" id="cb30-4" title="4"></a>
+<a class="sourceLine" id="cb30-5" title="5"><span class="ot">queens ::</span> <span class="dt">BoardSize</span> <span class="ot">-&gt;</span> [<span class="dt">Solution</span>]</a>
+<a class="sourceLine" id="cb30-6" title="6">queens n <span class="ot">=</span> <span class="fu">iterate</span> (<span class="fu">concatMap</span> (addQueen n)) [[ ]] <span class="op">!!</span> n</a>
+<a class="sourceLine" id="cb30-7" title="7"></a>
+<a class="sourceLine" id="cb30-8" title="8"><span class="ot">addQueen ::</span> <span class="dt">BoardSize</span> <span class="ot">-&gt;</span> <span class="dt">PartialSolution</span> <span class="ot">-&gt;</span> [<span class="dt">PartialSolution</span>]</a>
+<a class="sourceLine" id="cb30-9" title="9">addQueen n s <span class="ot">=</span> [x <span class="op">:</span> s <span class="op">|</span> x <span class="ot">&lt;-</span> [<span class="dv">1</span><span class="op">..</span>n], safe x s <span class="dv">1</span>]</a>
+<a class="sourceLine" id="cb30-10" title="10"></a>
+<a class="sourceLine" id="cb30-11" title="11"><span class="ot">safe ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">PartialSolution</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span></a>
+<a class="sourceLine" id="cb30-12" title="12">safe x [] n <span class="ot">=</span> <span class="dt">True</span></a>
+<a class="sourceLine" id="cb30-13" title="13">safe x (c <span class="op">:</span> y) n <span class="ot">=</span> x <span class="op">/=</span> c <span class="op">&amp;&amp;</span> x <span class="op">/=</span> c <span class="op">+</span> n</a>
+<a class="sourceLine" id="cb30-14" title="14">       <span class="op">&amp;&amp;</span> x <span class="op">/=</span> c <span class="op">-</span> n <span class="op">&amp;&amp;</span> safe x y (n <span class="op">+</span> <span class="dv">1</span>)</a></code></pre></div>
 </div>
 <div id="the-end" class="slide section level1">
 <h1>The end</h1>
-<div class="sourceCode" id="cb29"><pre class="sourceCode haskell"><code class="sourceCode haskell"></code></pre></div>
+<div class="sourceCode" id="cb31"><pre class="sourceCode haskell"><code class="sourceCode haskell"></code></pre></div>
 </div>
 </body>
 </html>

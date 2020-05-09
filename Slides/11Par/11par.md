@@ -87,58 +87,32 @@ x = 3
 
 `seq a b` *sequentially* evaluates `a` then returns `b` (without forcing it)
 
+# WHNF - shallow evaluation
 
+`seq` evaluates to so called Weak Head Normal Form
+- more or less up to first constructor:
 
-# Sudoku
+```
+Prelude> let xs = map (+1) [1..10] :: [Int]
+Prelude> :sprint xs
+xs = _
+Prelude> seq xs ()
+()
+Prelude> :sprint xs
+xs = _ : _
+```
 
-An example with lots of computation: solving Sudoku
+BTW, similar thing happens when evaluating `case`:
 
-Every line of input contains an instance of the problem
+```
+Prelude> let xs = map (+1) [1..10] :: [Int]
+Prelude> case xs of { [] -> (); _:_ -> () }
+()
+Prelude> :sprint xs
+xs = _ : _
+```
 
-Sequential program:
-
-~~~~ {.haskell}
-main = do
-    [f] <- getArgs
-    grids <- fmap lines $ readFile f
-    mapM_ (evaluate . solve) grids
-~~~~
-
-~~~~
-$ ghc -O2 -threaded --make sudoku1.hs
-$ ./sudoku1 sudoku17.1000.txt +RTS -s
-  TASKS: 3 (1 bound, 2 peak workers (2 total), using -N1)
-  SPARKS: 0 (0 converted, 0 overflowed, 0 dud, 0 GC'd, 0 fizzled)
-
-  Total   time    2.53s  (  2.56s elapsed)
-  Alloc rate    973,110,877 bytes per MUT second
-  Productivity  96.0% of total user, 94.9% of total elapsed
-~~~~
-
-# Multicore?
-
-Meet Azor: 64 cores, 64GB mem
-
-~~~~
-$ ghc -O2 -threaded --make sudoku1.hs
-$ ./sudoku1 sudoku17.1000.txt +RTS -s
-  TASKS: 3 (1 bound, 2 peak workers (2 total), using -N1)
-  SPARKS: 0 (0 converted, 0 overflowed, 0 dud, 0 GC'd, 0 fizzled)
-
-  Total   time    2.53s  (  2.56s elapsed)
-  Productivity  96.0% of total user, 94.9% of total elapsed
-~~~~
-
-~~~~
-$ ./sudoku1 sudoku17.1000.txt +RTS -s -N16
-  TASKS: 18 (1 bound, 17 peak workers (17 total), using -N16)
-  SPARKS: 0 (0 converted, 0 overflowed, 0 dud, 0 GC'd, 0 fizzled)
-
-  Total   time   16.84s  (  4.09s elapsed)
-  Productivity  51.8% of total user, 213.1% of total elapsed
-~~~~
-
-Our program works slower - we unnecessarily start N-1 additional threads that only get in the way.
+We will discuss deep evaluation (normal form) later.
 
 # The `Eval` monad - computation strategies
 
@@ -197,6 +171,57 @@ evaluate :: a -> IO a
 > let x = [undefined] :: [Int] in x `deepseq` length x
 *** Exception: Prelude.undefined
 ```
+
+# Sudoku
+
+An example with lots of computation: solving Sudoku
+
+Every line of input contains an instance of the problem
+
+Sequential program:
+
+~~~~ {.haskell}
+main = do
+    [f] <- getArgs
+    grids <- fmap lines $ readFile f
+    mapM_ (evaluate . solve) grids
+~~~~
+
+~~~~
+$ ghc -O2 -threaded --make sudoku1.hs
+$ ./sudoku1 sudoku17.1000.txt +RTS -s
+  TASKS: 3 (1 bound, 2 peak workers (2 total), using -N1)
+  SPARKS: 0 (0 converted, 0 overflowed, 0 dud, 0 GC'd, 0 fizzled)
+
+  Total   time    2.53s  (  2.56s elapsed)
+  Alloc rate    973,110,877 bytes per MUT second
+  Productivity  96.0% of total user, 94.9% of total elapsed
+~~~~
+
+# Multicore?
+
+Meet Azor: 64 cores, 64GB mem
+
+~~~~
+$ ghc -O2 -threaded --make sudoku1.hs
+$ ./sudoku1 sudoku17.1000.txt +RTS -s
+  TASKS: 3 (1 bound, 2 peak workers (2 total), using -N1)
+  SPARKS: 0 (0 converted, 0 overflowed, 0 dud, 0 GC'd, 0 fizzled)
+
+  Total   time    2.53s  (  2.56s elapsed)
+  Productivity  96.0% of total user, 94.9% of total elapsed
+~~~~
+
+~~~~
+$ ./sudoku1 sudoku17.1000.txt +RTS -s -N16
+  TASKS: 18 (1 bound, 17 peak workers (17 total), using -N16)
+  SPARKS: 0 (0 converted, 0 overflowed, 0 dud, 0 GC'd, 0 fizzled)
+
+  Total   time   16.84s  (  4.09s elapsed)
+  Productivity  51.8% of total user, 213.1% of total elapsed
+~~~~
+
+Our program works slower - we unnecessarily start N-1 additional threads that only get in the way.
 
 # A parallel program
 
