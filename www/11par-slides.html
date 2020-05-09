@@ -182,19 +182,19 @@ xs = _ : _</code></pre>
 <a class="sourceLine" id="cb6-7" title="7"><span class="ot">rpar ::</span> a <span class="ot">-&gt;</span> <span class="dt">Eval</span> a  <span class="co">-- &quot;my argument can be evaluated in parallel&quot;</span></a></code></pre></div>
 <p>Note:</p>
 <ul>
-<li><p>the argument to rpar should be a thunk, otherwise nothing happens, because there is no work to perform in parallel.</p></li>
-<li><p>by itself <code>par</code> evaluates shallowly:</p>
-<pre><code>&gt; :t par
-par :: a -&gt; b -&gt; b
-&gt; let xs = map (+1) [1..10] :: [Int]
+<li>the argument to rpar should be a thunk, otherwise nothing happens, because there is no work to perform in parallel.</li>
+<li>by itself <code>par</code> evaluates shallowly:</li>
+</ul>
+<pre><code>&gt; let xs = map (+1) [1..10] :: [Int]
 &gt; :sprint xs
 xs = _
 &gt; par xs ()
 ()
 &gt; :sprint xs
 xs = _ : _</code></pre>
-<h1 id="deepseq-friends">deepseq &amp; friends</h1></li>
-</ul>
+</div>
+<div id="deepseq-friends" class="slide section level1">
+<h1>deepseq &amp; friends</h1>
 <p>deepseq: fully evaluates the first argument, before returning the second.</p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb8-1" title="1"><span class="fu">seq</span><span class="ot"> ::</span> a <span class="ot">-&gt;</span> b <span class="ot">-&gt;</span> b</a>
 <a class="sourceLine" id="cb8-2" title="2"><span class="co">-- Control.DeepSeq</span></a>

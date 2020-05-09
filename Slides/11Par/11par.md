@@ -132,17 +132,15 @@ Note:
   otherwise nothing happens, because there is no work to perform in parallel.
 * by itself `par` evaluates shallowly:
 
-    ```
-    > :t par
-    par :: a -> b -> b
-    > let xs = map (+1) [1..10] :: [Int]
-    > :sprint xs
-    xs = _
-    > par xs ()
-    ()
-    > :sprint xs
-    xs = _ : _
-    ```
+```
+> let xs = map (+1) [1..10] :: [Int]
+> :sprint xs
+xs = _
+> par xs ()
+()
+> :sprint xs
+xs = _ : _
+```
 
 # deepseq & friends
 
