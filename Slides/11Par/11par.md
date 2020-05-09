@@ -155,9 +155,6 @@ class NFData a where
 -- (that is, fully evaluate all sub-components),
 -- and then return '()'
 
--- Default implementation
-    rnf a = a `seq` ()
-
 deepseq :: NFData a => a -> b -> b
 deepseq a b = rnf a `seq` b
 
@@ -182,6 +179,12 @@ evaluate :: a -> IO a
 
 > let x = [undefined] :: [Int] in x `deepseq` length x
 *** Exception: Prelude.undefined
+```
+Of course the forcing happens only when `deepseq` itself is evaluated
+
+```
+> let x = undefined::Int in let y = deepseq x () in 42
+42
 ```
 
 # Sudoku
