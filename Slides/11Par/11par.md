@@ -26,7 +26,7 @@ physical processors.
 
 --- [Simon Marlow, *Parallel and Concurrent Programming in Haskell*](https://simonmar.github.io/pages/pcph.html)
 
-(recommended reading, free to read online)
+(recommended reading, free to read online; NB ignore the "Start Your Free Trial" nags)
 
 # Haskell parallelism
 
@@ -195,14 +195,14 @@ Every line of input contains an instance of the problem
 
 Sequential program:
 
-~~~~ {.haskell}
+```haskell
 main = do
     [f] <- getArgs
     grids <- fmap lines $ readFile f
     mapM_ (evaluate . solve) grids
-~~~~
+```
 
-~~~~
+```
 $ ghc -O2 -threaded --make sudoku1.hs
 $ ./sudoku1 sudoku17.1000.txt +RTS -s
   TASKS: 3 (1 bound, 2 peak workers (2 total), using -N1)
@@ -211,7 +211,7 @@ $ ./sudoku1 sudoku17.1000.txt +RTS -s
   Total   time    2.53s  (  2.56s elapsed)
   Alloc rate    973,110,877 bytes per MUT second
   Productivity  96.0% of total user, 94.9% of total elapsed
-~~~~
+```
 
 # Multicore?
 
