@@ -449,7 +449,7 @@ newtype Property
   = Prop (Gen Result)
 ~~~~
 
-`Property`,  is a computation in the `Gen` onad, yielding `Result`
+`Property`,  is a computation in the `Gen` monad, yielding `Result`
 
 # Testable
 

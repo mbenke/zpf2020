@@ -400,7 +400,7 @@ $$ p = 1/2 $$
 <a class="sourceLine" id="cb27-5" title="5"></a>
 <a class="sourceLine" id="cb27-6" title="6"><span class="kw">newtype</span> <span class="dt">Property</span></a>
 <a class="sourceLine" id="cb27-7" title="7">  <span class="ot">=</span> <span class="dt">Prop</span> (<span class="dt">Gen</span> <span class="dt">Result</span>)</a></code></pre></div>
-<p><code>Property</code>, is a computation in the <code>Gen</code> onad, yielding <code>Result</code></p>
+<p><code>Property</code>, is a computation in the <code>Gen</code> monad, yielding <code>Result</code></p>
 <h1 id="testable">Testable</h1>
 <p>To test something, we need a <code>Result</code> generator</p>
 <div class="sourceCode" id="cb28"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb28-1" title="1"><span class="kw">class</span> <span class="dt">Testable</span> a <span class="kw">where</span></a>
