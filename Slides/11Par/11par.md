@@ -28,10 +28,6 @@ physical processors.
 
 (recommended reading, free to read online)
 
-# Evaluation
-
-Before discussing parallel evaluation, let's look at Haskell evaluation in general
-
 # Haskell parallelism
 
 * Parallel programs in Haskell are *deterministic*
@@ -39,6 +35,59 @@ Before discussing parallel evaluation, let's look at Haskell evaluation in gener
 * Programs can be debugged on 1 core
 * No risk of deadlock or race conditions
 * No need to worry about thread communication and synchronisation.
+
+# Evaluation
+
+Before discussing parallel evaluation, let's look at Haskell evaluation in general
+
+```
+> let x = 1+2 :: Int
+> :sprint x
+x = _
+```
+
+NB do not omit `::Int` lest you get misled.
+
+The `:sprint` command prints expression without evaluating; `_` means "unevaluated" (thunk).
+
+![thunk](plusThunk.png "a thunk")
+
+# Sharing
+
+```
+> let y = (x,x)
+> :sprint y
+y = (_,_)
+> fst y
+3
+> :sprint vv
+vv = (3,3)
+```
+
+Evaluating `fst vv` evaluated `x` which was both first and second component (was shared)
+
+![Sharing](sharing.png "Sharing example")
+
+# Forcing evaluation - seq
+
+```
+> let x = 1+2 :: Int
+> let y = x+1
+> :sprint x
+x = _
+> :sprint y
+y = _
+> seq y ()
+()
+> :sprint y
+y = 4
+> :sprint x
+x = 3
+```
+
+`seq a b` *sequentially* evaluates `a` then returns `b` (without forcing it)
+
+
 
 # Sudoku
 
