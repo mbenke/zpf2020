@@ -122,13 +122,27 @@ data Eval a
 instance Monad Eval
 
 runEval :: Eval a -> a
-rseq :: a -> Eval a  -- "in this thread"
-rpar :: a -> Eval a  --  "in a new thread"
+rseq :: a -> Eval a  -- "eval argument, wait for result"
+rpar :: a -> Eval a  -- "my argument can be evaluated in parallel"
 ~~~~
 
-Calling a lazy function in a new thread does not have much sense (why?)
+Note:
 
-We need to control the evaluation somehow.
+* the argument to rpar should be a thunk,
+  otherwise nothing happens, because there is no work to perform in parallel.
+* by itself `par` evaluates shallowly:
+
+    ```
+    > :t par
+    par :: a -> b -> b
+    > let xs = map (+1) [1..10] :: [Int]
+    > :sprint xs
+    xs = _
+    > par xs ()
+    ()
+    > :sprint xs
+    xs = _ : _
+    ```
 
 # deepseq & friends
 
