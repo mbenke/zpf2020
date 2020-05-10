@@ -388,6 +388,13 @@ $ ./sudoku3b sudoku17.1000.txt +RTS -N16 -s 2>&1 | grep Total
   Total   time    5.943s  (  0.487s elapsed)
 ```
 
+BTW `-N` without argument uses all capabilities, try it, but not on students:
+
+```
+$ ./sudoku3b sudoku17.1000.txt +RTS -N
+sudoku3b: failed to create OS thread: Cannot allocate memory
+```
+
 # Threadscope - sudoku3 -N2
 
 ![](sudoku3.png "sudoku3.eventlog")
