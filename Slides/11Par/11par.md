@@ -209,8 +209,6 @@ $ ./sudoku1 sudoku17.1000.txt +RTS -s
   SPARKS: 0 (0 converted, 0 overflowed, 0 dud, 0 GC'd, 0 fizzled)
 
   Total   time    2.53s  (  2.56s elapsed)
-  Alloc rate    973,110,877 bytes per MUT second
-  Productivity  96.0% of total user, 94.9% of total elapsed
 ```
 
 # Multicore?
@@ -224,7 +222,6 @@ $ ./sudoku1 sudoku17.1000.txt +RTS -s
   SPARKS: 0 (0 converted, 0 overflowed, 0 dud, 0 GC'd, 0 fizzled)
 
   Total   time    2.53s  (  2.56s elapsed)
-  Productivity  96.0% of total user, 94.9% of total elapsed
 ~~~~
 
 ~~~~
@@ -233,7 +230,6 @@ $ ./sudoku1 sudoku17.1000.txt +RTS -s -N16
   SPARKS: 0 (0 converted, 0 overflowed, 0 dud, 0 GC'd, 0 fizzled)
 
   Total   time   16.84s  (  4.09s elapsed)
-  Productivity  51.8% of total user, 213.1% of total elapsed
 ~~~~
 
 Our program works slower - we unnecessarily start N-1 additional threads that only get in the way.
@@ -269,7 +265,6 @@ $ ./sudoku2 sudoku17.1000.txt +RTS -N2 -s -RTS
   SPARKS: 2 (1 converted, 0 overflowed, 0 dud, 0 GC'd, 1 fizzled)
 
   Total   time    2.73s  (  1.77s elapsed)
-  Productivity  91.1% of total user, 140.4% of total elapsed
 ~~~~
 
 Better, but we are still unable to use the whole power:
@@ -281,7 +276,6 @@ Better, but we are still unable to use the whole power:
   SPARKS: 2 (1 converted, 0 overflowed, 0 dud, 0 GC'd, 1 fizzled)
 
   Total   time   15.12s  (  3.19s elapsed)
-  Productivity  55.2% of total user, 261.7% of total elapsed
 ```
 
 # Sparks
@@ -314,16 +308,25 @@ sparks in the pool may be
 
 ![spark lifecycle](spark-lifecycle800.png "Life cycle of a spark")
 
-# sudoku2.hs
+# sudoku1 vs sudoku2
 ~~~~
+$ ./sudoku1 sudoku17.1000.txt +RTS -s
+  TASKS: 3 (1 bound, 2 peak workers (2 total), using -N1)
+  SPARKS: 0 (0 converted, 0 overflowed, 0 dud, 0 GC'd, 0 fizzled)
+
+  Total   time    2.53s  (  2.56s elapsed)
+~~~~
+
+~~~~
+$ ./sudoku2 sudoku17.1000.txt +RTS -N2 -s -RTS
+
+  TASKS: 4 (1 bound, 3 peak workers (3 total), using -N2)
   SPARKS: 2 (1 converted, 0 overflowed, 0 dud, 0 GC'd, 1 fizzled)
 
   Total   time    2.73s  (  1.77s elapsed)
-
-  Productivity  91.1% of total user, 140.4% of total elapsed
 ~~~~
 
-Productivity better, but still far from ideal.
+Better, but still far from ideal.
 
 # Threadscope
 
@@ -340,6 +343,10 @@ $ ~/.cabal/bin/threadscope sudoku2.eventlog &
 # Threadscope - sudoku2
 
 ![](sudoku2.png "sudoku2.eventlog")
+
+Two work units of unequal size - some tiem wasted.
+
+We need better work allocation (granularity).
 
 # Dynamic work allocation
 
@@ -368,21 +375,10 @@ $ ./sudoku3b sudoku17.1000.txt +RTS -N2 -s -RTS
   SPARKS: 1000 (1000 converted, 0 overflowed, 0 dud, 0 GC'd, 0 fizzled)
 
   Total   time    2.84s  (  1.49s elapsed)
-  Productivity  88.9% of total user, 169.6% of total elapsed
 ~~~~
 
-Better productivity, easier to scale:
+More efficient, easier to scale (we can use -N4, -N8 now)
 
-~~~~
-sudoku2b
--N8: Productivity  71.0% of total user, 169.2% of total elapsed
-N16: Productivity  53.5% of total user, 252.6% of total elapsed
-
-sudoku3b
--N8: Productivity  78.5% of total user, 569.3% of total elapsed
-N16: Productivity  62.8% of total user, 833.8% of total elapsed
-N32: Productivity  43.5% of total user, 1112.6% of total elapsed
-~~~~
 
 # Threadscope - sudoku3 -N2
 

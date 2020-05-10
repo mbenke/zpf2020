@@ -242,9 +242,7 @@ $ ./sudoku1 sudoku17.1000.txt +RTS -s
   TASKS: 3 (1 bound, 2 peak workers (2 total), using -N1)
   SPARKS: 0 (0 converted, 0 overflowed, 0 dud, 0 GC&#39;d, 0 fizzled)
 
-  Total   time    2.53s  (  2.56s elapsed)
-  Alloc rate    973,110,877 bytes per MUT second
-  Productivity  96.0% of total user, 94.9% of total elapsed</code></pre>
+  Total   time    2.53s  (  2.56s elapsed)</code></pre>
 </div>
 <div id="multicore" class="slide section level1">
 <h1>Multicore?</h1>
@@ -254,14 +252,12 @@ $ ./sudoku1 sudoku17.1000.txt +RTS -s
   TASKS: 3 (1 bound, 2 peak workers (2 total), using -N1)
   SPARKS: 0 (0 converted, 0 overflowed, 0 dud, 0 GC&#39;d, 0 fizzled)
 
-  Total   time    2.53s  (  2.56s elapsed)
-  Productivity  96.0% of total user, 94.9% of total elapsed</code></pre>
+  Total   time    2.53s  (  2.56s elapsed)</code></pre>
 <pre><code>$ ./sudoku1 sudoku17.1000.txt +RTS -s -N16
   TASKS: 18 (1 bound, 17 peak workers (17 total), using -N16)
   SPARKS: 0 (0 converted, 0 overflowed, 0 dud, 0 GC&#39;d, 0 fizzled)
 
-  Total   time   16.84s  (  4.09s elapsed)
-  Productivity  51.8% of total user, 213.1% of total elapsed</code></pre>
+  Total   time   16.84s  (  4.09s elapsed)</code></pre>
 <p>Our program works slower - we unnecessarily start N-1 additional threads that only get in the way.</p>
 </div>
 <div id="a-parallel-program" class="slide section level1">
@@ -289,16 +285,14 @@ $ ./sudoku2 sudoku17.1000.txt +RTS -N2 -s -RTS
   TASKS: 4 (1 bound, 3 peak workers (3 total), using -N2)
   SPARKS: 2 (1 converted, 0 overflowed, 0 dud, 0 GC&#39;d, 1 fizzled)
 
-  Total   time    2.73s  (  1.77s elapsed)
-  Productivity  91.1% of total user, 140.4% of total elapsed</code></pre>
+  Total   time    2.73s  (  1.77s elapsed)</code></pre>
 <p>Better, but we are still unable to use the whole power:</p>
 <pre><code>./sudoku2 sudoku17.1000.txt +RTS -N16 -s -RTS
 
   TASKS: 18 (1 bound, 17 peak workers (17 total), using -N16)
   SPARKS: 2 (1 converted, 0 overflowed, 0 dud, 0 GC&#39;d, 1 fizzled)
 
-  Total   time   15.12s  (  3.19s elapsed)
-  Productivity  55.2% of total user, 261.7% of total elapsed</code></pre>
+  Total   time   15.12s  (  3.19s elapsed)</code></pre>
 </div>
 <div id="sparks" class="slide section level1">
 <h1>Sparks</h1>
@@ -330,14 +324,20 @@ $ ./sudoku2 sudoku17.1000.txt +RTS -N2 -s -RTS
 <p class="caption">spark lifecycle</p>
 </div>
 </div>
-<div id="sudoku2.hs" class="slide section level1">
-<h1>sudoku2.hs</h1>
-<pre><code>  SPARKS: 2 (1 converted, 0 overflowed, 0 dud, 0 GC&#39;d, 1 fizzled)
+<div id="sudoku1-vs-sudoku2" class="slide section level1">
+<h1>sudoku1 vs sudoku2</h1>
+<pre><code>$ ./sudoku1 sudoku17.1000.txt +RTS -s
+  TASKS: 3 (1 bound, 2 peak workers (2 total), using -N1)
+  SPARKS: 0 (0 converted, 0 overflowed, 0 dud, 0 GC&#39;d, 0 fizzled)
 
-  Total   time    2.73s  (  1.77s elapsed)
+  Total   time    2.53s  (  2.56s elapsed)</code></pre>
+<pre><code>$ ./sudoku2 sudoku17.1000.txt +RTS -N2 -s -RTS
 
-  Productivity  91.1% of total user, 140.4% of total elapsed</code></pre>
-<p>Productivity better, but still far from ideal.</p>
+  TASKS: 4 (1 bound, 3 peak workers (3 total), using -N2)
+  SPARKS: 2 (1 converted, 0 overflowed, 0 dud, 0 GC&#39;d, 1 fizzled)
+
+  Total   time    2.73s  (  1.77s elapsed)</code></pre>
+<p>Better, but still far from ideal.</p>
 </div>
 <div id="threadscope" class="slide section level1">
 <h1>Threadscope</h1>
@@ -353,18 +353,20 @@ $ ~/.cabal/bin/threadscope sudoku2.eventlog &amp;</code></pre>
 <div id="threadscope---sudoku2" class="slide section level1">
 <h1>Threadscope - sudoku2</h1>
 <p><img src="sudoku2.png" title="sudoku2.eventlog" /></p>
+<p>Two work units of unequal size - some tiem wasted.</p>
+<p>We need better work allocation (granularity).</p>
 </div>
 <div id="dynamic-work-allocation" class="slide section level1">
 <h1>Dynamic work allocation</h1>
 <p>Parallel map: process list elements in parallel</p>
-<div class="sourceCode" id="cb20"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb20-1" title="1"><span class="ot">parMap ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> <span class="dt">Eval</span> [b]</a>
-<a class="sourceLine" id="cb20-2" title="2">parMap f [] <span class="ot">=</span> <span class="fu">return</span> []</a>
-<a class="sourceLine" id="cb20-3" title="3">parMap f (a<span class="op">:</span>as) <span class="ot">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb20-4" title="4">   b <span class="ot">&lt;-</span> rpar (f a)</a>
-<a class="sourceLine" id="cb20-5" title="5">   bs <span class="ot">&lt;-</span> parMap f as</a>
-<a class="sourceLine" id="cb20-6" title="6">   <span class="fu">return</span> (b<span class="op">:</span>bs)</a></code></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb21-1" title="1"><span class="ot">parMap ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> <span class="dt">Eval</span> [b]</a>
+<a class="sourceLine" id="cb21-2" title="2">parMap f [] <span class="ot">=</span> <span class="fu">return</span> []</a>
+<a class="sourceLine" id="cb21-3" title="3">parMap f (a<span class="op">:</span>as) <span class="ot">=</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb21-4" title="4">   b <span class="ot">&lt;-</span> rpar (f a)</a>
+<a class="sourceLine" id="cb21-5" title="5">   bs <span class="ot">&lt;-</span> parMap f as</a>
+<a class="sourceLine" id="cb21-6" title="6">   <span class="fu">return</span> (b<span class="op">:</span>bs)</a></code></pre></div>
 <p>Evaluation:</p>
-<div class="sourceCode" id="cb21"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb21-1" title="1">    runEval (parMap solve grids) <span class="ot">`deepseq`</span> <span class="fu">return</span> ()</a></code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb22-1" title="1">    runEval (parMap solve grids) <span class="ot">`deepseq`</span> <span class="fu">return</span> ()</a></code></pre></div>
 </div>
 <div id="parmap---results" class="slide section level1">
 <h1>parMap - results</h1>
@@ -372,17 +374,8 @@ $ ~/.cabal/bin/threadscope sudoku2.eventlog &amp;</code></pre>
   TASKS: 4 (1 bound, 3 peak workers (3 total), using -N2)
   SPARKS: 1000 (1000 converted, 0 overflowed, 0 dud, 0 GC&#39;d, 0 fizzled)
 
-  Total   time    2.84s  (  1.49s elapsed)
-  Productivity  88.9% of total user, 169.6% of total elapsed</code></pre>
-<p>Better productivity, easier to scale:</p>
-<pre><code>sudoku2b
--N8: Productivity  71.0% of total user, 169.2% of total elapsed
-N16: Productivity  53.5% of total user, 252.6% of total elapsed
-
-sudoku3b
--N8: Productivity  78.5% of total user, 569.3% of total elapsed
-N16: Productivity  62.8% of total user, 833.8% of total elapsed
-N32: Productivity  43.5% of total user, 1112.6% of total elapsed</code></pre>
+  Total   time    2.84s  (  1.49s elapsed)</code></pre>
+<p>More efficient, easier to scale (we can use -N4, -N8 now)</p>
 </div>
 <div id="threadscope---sudoku3--n2" class="slide section level1">
 <h1>Threadscope - sudoku3 -N2</h1>
