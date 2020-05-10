@@ -403,7 +403,7 @@ sudoku3b: failed to create OS thread: Cannot allocate memory
 
 ![](sudoku3-N8.png "sudoku3-N8.eventlog")
 
-# Strategie
+# Strategies
 
 Additional abstraction layer built upon the `Eval` monad
 
@@ -436,6 +436,21 @@ parList strat (x:xs) = do
 	xs' <- parList strat xs
 	return (x':xs)
 ~~~~
+
+The reason 'using' works at all is that Haskell is lazy
+
+`map f xs` creates a thunk
+
+```
+x `using` s = runEval (s x)
+
+parMap f xs
+= map f xs `using` parList rseq
+= runEval (parList rseq (map f xs))
+~ case (map f xs) of
+    [] -> [];
+    (y:ys) -> runEval $ do ...
+```
 
 # Cautionary note
 

@@ -343,7 +343,7 @@ sudoku3b: failed to create OS thread: Cannot allocate memory</code></pre>
 <p><img src="sudoku3.png" title="sudoku3.eventlog" /></p>
 <h1 id="threadscope---sudoku3--n8">Threadscope - sudoku3 -N8</h1>
 <p><img src="sudoku3-N8.png" title="sudoku3-N8.eventlog" /></p>
-<h1 id="strategie">Strategie</h1>
+<h1 id="strategies">Strategies</h1>
 <p>Additional abstraction layer built upon the <code>Eval</code> monad</p>
 <div class="sourceCode" id="cb25"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb25-1" title="1"><span class="kw">type</span> <span class="dt">Strategy</span> a <span class="ot">=</span> a <span class="ot">-&gt;</span> <span class="dt">Eval</span></a>
 <a class="sourceLine" id="cb25-2" title="2"><span class="ot">rseq ::</span> <span class="dt">Strategy</span> a</a>
@@ -366,16 +366,26 @@ sudoku3b: failed to create OS thread: Cannot allocate memory</code></pre>
 <a class="sourceLine" id="cb26-7" title="7">    x&#39; <span class="ot">&lt;-</span> rpar (x <span class="ot">`using`</span> strat)</a>
 <a class="sourceLine" id="cb26-8" title="8">    xs&#39; <span class="ot">&lt;-</span> parList strat xs</a>
 <a class="sourceLine" id="cb26-9" title="9">    <span class="fu">return</span> (x&#39;<span class="op">:</span>xs)</a></code></pre></div>
+<p>The reason ‘using’ works at all is that Haskell is lazy</p>
+<p><code>map f xs</code> creates a thunk</p>
+<pre><code>x `using` s = runEval (s x)
+
+parMap f xs
+= map f xs `using` parList rseq
+= runEval (parList rseq (map f xs))
+~ case (map f xs) of
+    [] -&gt; [];
+    (y:ys) -&gt; runEval $ do ...</code></pre>
 <h1 id="cautionary-note">Cautionary note</h1>
 <p>Although the sparks are really cheap, one should not create too many of them</p>
-<div class="sourceCode" id="cb27"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb27-1" title="1">parFib n <span class="op">|</span> n <span class="op">&lt;</span> <span class="dv">2</span> <span class="ot">=</span> n</a>
-<a class="sourceLine" id="cb27-2" title="2">parFib n <span class="ot">=</span> p <span class="ot">`par`</span> q <span class="ot">`pseq`</span> (p <span class="op">+</span> q)</a>
-<a class="sourceLine" id="cb27-3" title="3">    <span class="kw">where</span></a>
-<a class="sourceLine" id="cb27-4" title="4">      p <span class="ot">=</span> parFib <span class="op">$</span> n <span class="op">-</span> <span class="dv">1</span></a>
-<a class="sourceLine" id="cb27-5" title="5">      q <span class="ot">=</span> parFib <span class="op">$</span> n <span class="op">-</span> <span class="dv">2</span></a>
-<a class="sourceLine" id="cb27-6" title="6"></a>
-<a class="sourceLine" id="cb27-7" title="7"><span class="ot">main ::</span> <span class="dt">IO</span> ()</a>
-<a class="sourceLine" id="cb27-8" title="8">main <span class="ot">=</span> <span class="fu">print</span> <span class="op">$</span> parFib <span class="dv">40</span></a></code></pre></div>
+<div class="sourceCode" id="cb28"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb28-1" title="1">parFib n <span class="op">|</span> n <span class="op">&lt;</span> <span class="dv">2</span> <span class="ot">=</span> n</a>
+<a class="sourceLine" id="cb28-2" title="2">parFib n <span class="ot">=</span> p <span class="ot">`par`</span> q <span class="ot">`pseq`</span> (p <span class="op">+</span> q)</a>
+<a class="sourceLine" id="cb28-3" title="3">    <span class="kw">where</span></a>
+<a class="sourceLine" id="cb28-4" title="4">      p <span class="ot">=</span> parFib <span class="op">$</span> n <span class="op">-</span> <span class="dv">1</span></a>
+<a class="sourceLine" id="cb28-5" title="5">      q <span class="ot">=</span> parFib <span class="op">$</span> n <span class="op">-</span> <span class="dv">2</span></a>
+<a class="sourceLine" id="cb28-6" title="6"></a>
+<a class="sourceLine" id="cb28-7" title="7"><span class="ot">main ::</span> <span class="dt">IO</span> ()</a>
+<a class="sourceLine" id="cb28-8" title="8">main <span class="ot">=</span> <span class="fu">print</span> <span class="op">$</span> parFib <span class="dv">40</span></a></code></pre></div>
 <pre><code>@azor:
 ./badfib +RTS -N2 -s -RTS
   SPARKS: 165597322 (16 converted, 14860689 overflowed, 0 dud,
@@ -393,17 +403,17 @@ N60:
 <img src="spark-lifecycle800.png" title="Life cycle of a spark" alt="spark lifecycle" /><figcaption>spark lifecycle</figcaption>
 </figure>
 <h1 id="better">Better</h1>
-<div class="sourceCode" id="cb29"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb29-1" title="1"><span class="ot">cutoff ::</span> <span class="dt">Int</span></a>
-<a class="sourceLine" id="cb29-2" title="2">cutoff <span class="ot">=</span> <span class="dv">20</span></a>
-<a class="sourceLine" id="cb29-3" title="3"></a>
-<a class="sourceLine" id="cb29-4" title="4">parFib n <span class="op">|</span> n <span class="op">&lt;</span> cutoff <span class="ot">=</span> fib n</a>
-<a class="sourceLine" id="cb29-5" title="5">parFib n <span class="ot">=</span> p <span class="ot">`par`</span> q <span class="ot">`pseq`</span> (p <span class="op">+</span> q)</a>
-<a class="sourceLine" id="cb29-6" title="6">    <span class="kw">where</span></a>
-<a class="sourceLine" id="cb29-7" title="7">      p <span class="ot">=</span> parFib <span class="op">$</span> n <span class="op">-</span> <span class="dv">1</span></a>
-<a class="sourceLine" id="cb29-8" title="8">      q <span class="ot">=</span> parFib <span class="op">$</span> n <span class="op">-</span> <span class="dv">2</span></a>
-<a class="sourceLine" id="cb29-9" title="9"></a>
-<a class="sourceLine" id="cb29-10" title="10">fib n <span class="op">|</span> n<span class="op">&lt;</span><span class="dv">2</span> <span class="ot">=</span> n</a>
-<a class="sourceLine" id="cb29-11" title="11">fib n <span class="ot">=</span> fib (n <span class="op">-</span> <span class="dv">1</span>) <span class="op">+</span> fib (n <span class="op">-</span> <span class="dv">2</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb30"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb30-1" title="1"><span class="ot">cutoff ::</span> <span class="dt">Int</span></a>
+<a class="sourceLine" id="cb30-2" title="2">cutoff <span class="ot">=</span> <span class="dv">20</span></a>
+<a class="sourceLine" id="cb30-3" title="3"></a>
+<a class="sourceLine" id="cb30-4" title="4">parFib n <span class="op">|</span> n <span class="op">&lt;</span> cutoff <span class="ot">=</span> fib n</a>
+<a class="sourceLine" id="cb30-5" title="5">parFib n <span class="ot">=</span> p <span class="ot">`par`</span> q <span class="ot">`pseq`</span> (p <span class="op">+</span> q)</a>
+<a class="sourceLine" id="cb30-6" title="6">    <span class="kw">where</span></a>
+<a class="sourceLine" id="cb30-7" title="7">      p <span class="ot">=</span> parFib <span class="op">$</span> n <span class="op">-</span> <span class="dv">1</span></a>
+<a class="sourceLine" id="cb30-8" title="8">      q <span class="ot">=</span> parFib <span class="op">$</span> n <span class="op">-</span> <span class="dv">2</span></a>
+<a class="sourceLine" id="cb30-9" title="9"></a>
+<a class="sourceLine" id="cb30-10" title="10">fib n <span class="op">|</span> n<span class="op">&lt;</span><span class="dv">2</span> <span class="ot">=</span> n</a>
+<a class="sourceLine" id="cb30-11" title="11">fib n <span class="ot">=</span> fib (n <span class="op">-</span> <span class="dv">1</span>) <span class="op">+</span> fib (n <span class="op">-</span> <span class="dv">2</span>)</a></code></pre></div>
 <pre><code>./parfib +RTS -N60 -s -RTS
  SPARKS: 118393 (42619 converted, 0 overflowed, 0 dud,
                  11241 GC&#39;d, 64533 fizzled)
@@ -443,21 +453,21 @@ $ ~/.cabal/bin/threadscope parfib.eventlog</code></pre>
 <li><p>sequential</p></li>
 <li><p>parallel</p></li>
 </ul>
-<div class="sourceCode" id="cb33"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb33-1" title="1"><span class="kw">type</span> <span class="dt">PartialSolution</span> <span class="ot">=</span> [<span class="dt">Int</span>]</a>
-<a class="sourceLine" id="cb33-2" title="2"><span class="kw">type</span> <span class="dt">Solution</span> <span class="ot">=</span> <span class="dt">PartialSolution</span></a>
-<a class="sourceLine" id="cb33-3" title="3"><span class="kw">type</span> <span class="dt">BoardSize</span> <span class="ot">=</span> <span class="dt">Int</span></a>
-<a class="sourceLine" id="cb33-4" title="4"></a>
-<a class="sourceLine" id="cb33-5" title="5"><span class="ot">queens ::</span> <span class="dt">BoardSize</span> <span class="ot">-&gt;</span> [<span class="dt">Solution</span>]</a>
-<a class="sourceLine" id="cb33-6" title="6">queens n <span class="ot">=</span> <span class="fu">iterate</span> (<span class="fu">concatMap</span> (addQueen n)) [[ ]] <span class="op">!!</span> n</a>
-<a class="sourceLine" id="cb33-7" title="7"></a>
-<a class="sourceLine" id="cb33-8" title="8"><span class="ot">addQueen ::</span> <span class="dt">BoardSize</span> <span class="ot">-&gt;</span> <span class="dt">PartialSolution</span> <span class="ot">-&gt;</span> [<span class="dt">PartialSolution</span>]</a>
-<a class="sourceLine" id="cb33-9" title="9">addQueen n s <span class="ot">=</span> [x <span class="op">:</span> s <span class="op">|</span> x <span class="ot">&lt;-</span> [<span class="dv">1</span><span class="op">..</span>n], safe x s <span class="dv">1</span>]</a>
-<a class="sourceLine" id="cb33-10" title="10"></a>
-<a class="sourceLine" id="cb33-11" title="11"><span class="ot">safe ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">PartialSolution</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span></a>
-<a class="sourceLine" id="cb33-12" title="12">safe x [] n <span class="ot">=</span> <span class="dt">True</span></a>
-<a class="sourceLine" id="cb33-13" title="13">safe x (c <span class="op">:</span> y) n <span class="ot">=</span> x <span class="op">/=</span> c <span class="op">&amp;&amp;</span> x <span class="op">/=</span> c <span class="op">+</span> n</a>
-<a class="sourceLine" id="cb33-14" title="14">       <span class="op">&amp;&amp;</span> x <span class="op">/=</span> c <span class="op">-</span> n <span class="op">&amp;&amp;</span> safe x y (n <span class="op">+</span> <span class="dv">1</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb34"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb34-1" title="1"><span class="kw">type</span> <span class="dt">PartialSolution</span> <span class="ot">=</span> [<span class="dt">Int</span>]</a>
+<a class="sourceLine" id="cb34-2" title="2"><span class="kw">type</span> <span class="dt">Solution</span> <span class="ot">=</span> <span class="dt">PartialSolution</span></a>
+<a class="sourceLine" id="cb34-3" title="3"><span class="kw">type</span> <span class="dt">BoardSize</span> <span class="ot">=</span> <span class="dt">Int</span></a>
+<a class="sourceLine" id="cb34-4" title="4"></a>
+<a class="sourceLine" id="cb34-5" title="5"><span class="ot">queens ::</span> <span class="dt">BoardSize</span> <span class="ot">-&gt;</span> [<span class="dt">Solution</span>]</a>
+<a class="sourceLine" id="cb34-6" title="6">queens n <span class="ot">=</span> <span class="fu">iterate</span> (<span class="fu">concatMap</span> (addQueen n)) [[ ]] <span class="op">!!</span> n</a>
+<a class="sourceLine" id="cb34-7" title="7"></a>
+<a class="sourceLine" id="cb34-8" title="8"><span class="ot">addQueen ::</span> <span class="dt">BoardSize</span> <span class="ot">-&gt;</span> <span class="dt">PartialSolution</span> <span class="ot">-&gt;</span> [<span class="dt">PartialSolution</span>]</a>
+<a class="sourceLine" id="cb34-9" title="9">addQueen n s <span class="ot">=</span> [x <span class="op">:</span> s <span class="op">|</span> x <span class="ot">&lt;-</span> [<span class="dv">1</span><span class="op">..</span>n], safe x s <span class="dv">1</span>]</a>
+<a class="sourceLine" id="cb34-10" title="10"></a>
+<a class="sourceLine" id="cb34-11" title="11"><span class="ot">safe ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">PartialSolution</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span></a>
+<a class="sourceLine" id="cb34-12" title="12">safe x [] n <span class="ot">=</span> <span class="dt">True</span></a>
+<a class="sourceLine" id="cb34-13" title="13">safe x (c <span class="op">:</span> y) n <span class="ot">=</span> x <span class="op">/=</span> c <span class="op">&amp;&amp;</span> x <span class="op">/=</span> c <span class="op">+</span> n</a>
+<a class="sourceLine" id="cb34-14" title="14">       <span class="op">&amp;&amp;</span> x <span class="op">/=</span> c <span class="op">-</span> n <span class="op">&amp;&amp;</span> safe x y (n <span class="op">+</span> <span class="dv">1</span>)</a></code></pre></div>
 <h1 id="the-end">The end</h1>
-<div class="sourceCode" id="cb34"><pre class="sourceCode haskell"><code class="sourceCode haskell"></code></pre></div>
+<div class="sourceCode" id="cb35"><pre class="sourceCode haskell"><code class="sourceCode haskell"></code></pre></div>
 </body>
 </html>
