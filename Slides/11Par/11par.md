@@ -367,18 +367,26 @@ Evaluation:
     runEval (parMap solve grids) `deepseq` return ()
 ~~~~
 
-# parMap - results
-
-~~~~
-$ ./sudoku3b sudoku17.1000.txt +RTS -N2 -s -RTS
-  TASKS: 4 (1 bound, 3 peak workers (3 total), using -N2)
-  SPARKS: 1000 (1000 converted, 0 overflowed, 0 dud, 0 GC'd, 0 fizzled)
-
-  Total   time    2.84s  (  1.49s elapsed)
-~~~~
+# parMap - results (on students)
 
 More efficient, easier to scale (we can use -N4, -N8 now)
 
+```
+$ ./sudoku3b sudoku17.1000.txt +RTS -N1 -s 2>&1 | grep Total
+  Total   time    3.497s  (  3.551s elapsed)
+
+$ ./sudoku3b sudoku17.1000.txt +RTS -N2 -s 2>&1 | grep Total
+  Total   time    5.143s  (  2.642s elapsed)
+
+$ ./sudoku3b sudoku17.1000.txt +RTS -N4 -s 2>&1 | grep Total
+  Total   time    5.167s  (  1.364s elapsed)
+
+$ ./sudoku3b sudoku17.1000.txt +RTS -N8 -s 2>&1 | grep Total
+  Total   time    5.317s  (  0.755s elapsed)
+
+$ ./sudoku3b sudoku17.1000.txt +RTS -N16 -s 2>&1 | grep Total
+  Total   time    5.943s  (  0.487s elapsed)
+```
 
 # Threadscope - sudoku3 -N2
 

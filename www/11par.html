@@ -320,13 +320,22 @@ $ ~/.cabal/bin/threadscope sudoku2.eventlog &amp;</code></pre>
 <a class="sourceLine" id="cb21-6" title="6">   <span class="fu">return</span> (b<span class="op">:</span>bs)</a></code></pre></div>
 <p>Evaluation:</p>
 <div class="sourceCode" id="cb22"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb22-1" title="1">    runEval (parMap solve grids) <span class="ot">`deepseq`</span> <span class="fu">return</span> ()</a></code></pre></div>
-<h1 id="parmap---results">parMap - results</h1>
-<pre><code>$ ./sudoku3b sudoku17.1000.txt +RTS -N2 -s -RTS
-  TASKS: 4 (1 bound, 3 peak workers (3 total), using -N2)
-  SPARKS: 1000 (1000 converted, 0 overflowed, 0 dud, 0 GC&#39;d, 0 fizzled)
-
-  Total   time    2.84s  (  1.49s elapsed)</code></pre>
+<h1 id="parmap---results-on-students">parMap - results (on students)</h1>
 <p>More efficient, easier to scale (we can use -N4, -N8 now)</p>
+<pre><code>$ ./sudoku3b sudoku17.1000.txt +RTS -N1 -s 2&gt;&amp;1 | grep Total
+  Total   time    3.497s  (  3.551s elapsed)
+
+$ ./sudoku3b sudoku17.1000.txt +RTS -N2 -s 2&gt;&amp;1 | grep Total
+  Total   time    5.143s  (  2.642s elapsed)
+
+$ ./sudoku3b sudoku17.1000.txt +RTS -N4 -s 2&gt;&amp;1 | grep Total
+  Total   time    5.167s  (  1.364s elapsed)
+
+$ ./sudoku3b sudoku17.1000.txt +RTS -N8 -s 2&gt;&amp;1 | grep Total
+  Total   time    5.317s  (  0.755s elapsed)
+
+$ ./sudoku3b sudoku17.1000.txt +RTS -N16 -s 2&gt;&amp;1 | grep Total
+  Total   time    5.943s  (  0.487s elapsed)</code></pre>
 <h1 id="threadscope---sudoku3--n2">Threadscope - sudoku3 -N2</h1>
 <p><img src="sudoku3.png" title="sudoku3.eventlog" /></p>
 <h1 id="threadscope---sudoku3--n8">Threadscope - sudoku3 -N8</h1>
