@@ -1,8 +1,9 @@
 BINFILES=parfib badfib sudoku1 sudoku2 sudoku3b
 GHCOPTS=-O2 -rtsopts -threaded -eventlog
+GHC=ghc
 
 %: %.hs
-	ghc $(GHCOPTS) -o $@ --make $^
+	$(GHC) $(GHCOPTS) -o $@ --make $^
 
 all: $(BINFILES)
 
