@@ -553,27 +553,11 @@ $ ~/.cabal/bin/threadscope parfib.eventlog
 
 Write a function putting n queens on n*n chessboard
 
-* sequential
+* sequential (see e.g. `Code/queens.hs`)
 
 * parallel
 
-~~~~ {.haskell}
-type PartialSolution = [Int]
-type Solution = PartialSolution
-type BoardSize = Int
-
-queens :: BoardSize -> [Solution]
-queens n = iterate (concatMap (addQueen n)) [[ ]] !! n
-
-addQueen :: BoardSize -> PartialSolution -> [PartialSolution]
-addQueen n s = [x : s | x <- [1..n], safe x s 1]
-
-safe :: Int -> PartialSolution -> Int -> Bool
-safe x [] n = True
-safe x (c : y) n = x /= c && x /= c + n
-       && x /= c - n && safe x y (n + 1)
-~~~~
-
+* examine the execution on thradscope and consider resizing the work units
 
 # The end
 

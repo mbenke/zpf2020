@@ -524,27 +524,14 @@ $ ~/.cabal/bin/threadscope parfib.eventlog</code></pre>
 <h1>Exercise</h1>
 <p>Write a function putting n queens on n*n chessboard</p>
 <ul>
-<li><p>sequential</p></li>
+<li><p>sequential (see e.g. <code>Code/queens.hs</code>)</p></li>
 <li><p>parallel</p></li>
+<li><p>examine the execution on thradscope and consider resizing the work units</p></li>
 </ul>
-<div class="sourceCode" id="cb34"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb34-1" title="1"><span class="kw">type</span> <span class="dt">PartialSolution</span> <span class="ot">=</span> [<span class="dt">Int</span>]</a>
-<a class="sourceLine" id="cb34-2" title="2"><span class="kw">type</span> <span class="dt">Solution</span> <span class="ot">=</span> <span class="dt">PartialSolution</span></a>
-<a class="sourceLine" id="cb34-3" title="3"><span class="kw">type</span> <span class="dt">BoardSize</span> <span class="ot">=</span> <span class="dt">Int</span></a>
-<a class="sourceLine" id="cb34-4" title="4"></a>
-<a class="sourceLine" id="cb34-5" title="5"><span class="ot">queens ::</span> <span class="dt">BoardSize</span> <span class="ot">-&gt;</span> [<span class="dt">Solution</span>]</a>
-<a class="sourceLine" id="cb34-6" title="6">queens n <span class="ot">=</span> <span class="fu">iterate</span> (<span class="fu">concatMap</span> (addQueen n)) [[ ]] <span class="op">!!</span> n</a>
-<a class="sourceLine" id="cb34-7" title="7"></a>
-<a class="sourceLine" id="cb34-8" title="8"><span class="ot">addQueen ::</span> <span class="dt">BoardSize</span> <span class="ot">-&gt;</span> <span class="dt">PartialSolution</span> <span class="ot">-&gt;</span> [<span class="dt">PartialSolution</span>]</a>
-<a class="sourceLine" id="cb34-9" title="9">addQueen n s <span class="ot">=</span> [x <span class="op">:</span> s <span class="op">|</span> x <span class="ot">&lt;-</span> [<span class="dv">1</span><span class="op">..</span>n], safe x s <span class="dv">1</span>]</a>
-<a class="sourceLine" id="cb34-10" title="10"></a>
-<a class="sourceLine" id="cb34-11" title="11"><span class="ot">safe ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">PartialSolution</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span></a>
-<a class="sourceLine" id="cb34-12" title="12">safe x [] n <span class="ot">=</span> <span class="dt">True</span></a>
-<a class="sourceLine" id="cb34-13" title="13">safe x (c <span class="op">:</span> y) n <span class="ot">=</span> x <span class="op">/=</span> c <span class="op">&amp;&amp;</span> x <span class="op">/=</span> c <span class="op">+</span> n</a>
-<a class="sourceLine" id="cb34-14" title="14">       <span class="op">&amp;&amp;</span> x <span class="op">/=</span> c <span class="op">-</span> n <span class="op">&amp;&amp;</span> safe x y (n <span class="op">+</span> <span class="dv">1</span>)</a></code></pre></div>
 </div>
 <div id="the-end" class="slide section level1">
 <h1>The end</h1>
-<div class="sourceCode" id="cb35"><pre class="sourceCode haskell"><code class="sourceCode haskell"></code></pre></div>
+<div class="sourceCode" id="cb34"><pre class="sourceCode haskell"><code class="sourceCode haskell"></code></pre></div>
 </div>
 </body>
 </html>
