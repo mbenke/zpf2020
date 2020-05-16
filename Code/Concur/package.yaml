@@ -15,6 +15,9 @@ executables:
   geturls1:
     main: geturls1.hs
     other-modules: GetURL
+  geturls2:
+    main: geturls2.hs
+    other-modules: GetURL
   stm1:
     main: stm1.hs
   delay:
