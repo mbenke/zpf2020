@@ -5,11 +5,11 @@ main = do
   m1 <- newEmptyMVar
   m2 <- newEmptyMVar
   forkIO $ do
-    r <- getURL "http://evemaps.dotlan.net/map/Domain"
+    r <- getURL "http://hackage.haskell.org/package/base"
     putMVar m1 r
 
   forkIO $ do
-    r <- getURL "http://evemaps.dotlan.net/map/Lonetrek"
+    r <- getURL "http://hackage.haskell.org/package/parallel"
     putMVar m2 r
 
   r1 <- takeMVar m1

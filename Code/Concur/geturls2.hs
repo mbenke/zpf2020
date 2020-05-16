@@ -14,8 +14,8 @@ wait :: Async a -> IO a
 wait (Async var) = readMVar var
 
 main = do
-  m1 <- async $ getURL "http://evemaps.dotlan.net/map/Domain"
-  m2 <- async $ getURL "http://evemaps.dotlan.net/map/Lonetrek"
+  m1 <- async $ getURL "http://hackage.haskell.org/package/base"
+  m2 <- async $ getURL "http://hackage.haskell.org/package/parallel"
   wait m1
   putStrLn "1 DONE"
   wait m2
