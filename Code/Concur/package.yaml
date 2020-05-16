@@ -2,6 +2,7 @@ name: zpf-concur
 
 dependencies:
   - base
+  - bytestring
   - stm
   - monad-par
   - parallel
@@ -18,6 +19,9 @@ executables:
   geturls2:
     main: geturls2.hs
     other-modules: GetURL
+  geturls3:
+    main: geturls3.hs
+    other-modules: GetURL, TimeIt
   stm1:
     main: stm1.hs
   delay:
