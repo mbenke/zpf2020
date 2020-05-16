@@ -1,5 +1,3 @@
-% Advanced functional programming
-% Marcin Benke
 ---
 title: Advanced Functional Programming
 subtitle: Parallelism and Concurrency
