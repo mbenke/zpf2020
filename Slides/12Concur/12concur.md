@@ -612,22 +612,6 @@ get :: IVar a -> Par a
   Total   time    1.745s  (  1.779s elapsed)
 ```
 
-# Caution
-
-There is nothing in the types to stop you from returning an `IVar` from
-`runPar` and passing it to another call of `runPar`.
-
-**This is a Very Bad Idea; don’t do it.**
-
-The implementation of the `Par` monad assumes
-that `IVars` are created and used within the same `runPar`, and
-breaking this assumption could lead to a runtime error, deadlock,
-or worse.
-
-The library could prevent you from doing this using qualified types
-in the same way that the `ST` monad prevents you from returning an
-`STRef` from `runST`.  This is planned for a future version.
-
 
 # Dataflow parallelism: the `Par` monad
 
@@ -723,39 +707,16 @@ main = do
 --   Total   time    1.603s  (  0.825s elapsed)
 ~~~~
 
-# Exercise: more `nqueens` variants
-
-Rewrite `nqueens` from last week (using `Eval`) to use `Par`
-
-Ditto with `forkIO+MVar`
-
-Careful with granularity!
-
-
-
 # THE END
 
 ~~~~ {.haskell}
 
 ~~~~
 
-# Budowanie abstrakcji przy użyciu MVar -- kanały
+# Bonus Exercise: more `nqueens` variants
 
-`MVar`: jednoelementowy bufor/semafor:
+Rewrite `nqueens` from last week (using `Eval`) to use `Par`
 
-~~~~ {.haskell}
-newMVar  :: a -> IO (MVar a)
-takeMVar ::  MVar a -> IO a
-putMVar  :: MVar a -> a -> IO ()
-~~~~
+Ditto with `forkIO+MVar`
 
-`Chan`: nieograniczony bufor (kanał)
-
-~~~~ {.haskell}
-data Chan a
-newChan   :: IO ( Chan a )
-readChan  :: Chan a -> IO a
-writeChan :: Chan a -> a -> IO ()
-~~~~
-
-# Asynchroniczne wyjątki
+Careful with granularity!

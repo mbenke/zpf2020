@@ -478,11 +478,6 @@ delay n = delay $! n-1
   Total   time    1.750s  (  1.096s elapsed)
 ./parmonad 34 35 +RTS -N1 -s
   Total   time    1.745s  (  1.779s elapsed)</code></pre>
-<h1 id="caution">Caution</h1>
-<p>There is nothing in the types to stop you from returning an <code>IVar</code> from <code>runPar</code> and passing it to another call of <code>runPar</code>.</p>
-<p><strong>This is a Very Bad Idea; don’t do it.</strong></p>
-<p>The implementation of the <code>Par</code> monad assumes that <code>IVars</code> are created and used within the same <code>runPar</code>, and breaking this assumption could lead to a runtime error, deadlock, or worse.</p>
-<p>The library could prevent you from doing this using qualified types in the same way that the <code>ST</code> monad prevents you from returning an <code>STRef</code> from <code>runST</code>. This is planned for a future version.</p>
 <h1 id="dataflow-parallelism-the-par-monad-1">Dataflow parallelism: the <code>Par</code> monad</h1>
 <p>A program can be represented as a dataflow network (graph) where vertices represent operations, edges - dependencies.</p>
 <p><img src="dataflow-network.png" title="Dataflow network" /></p>
@@ -554,22 +549,11 @@ delay n = delay $! n-1
 <a class="sourceLine" id="cb43-18" title="18"><span class="co">--   Total   time    1.536s  (  1.577s elapsed)</span></a>
 <a class="sourceLine" id="cb43-19" title="19"><span class="co">-- sudoku-par3 +RTS -s  -N2 -RTS ../Marlow/sudoku17.1000.txt</span></a>
 <a class="sourceLine" id="cb43-20" title="20"><span class="co">--   Total   time    1.603s  (  0.825s elapsed)</span></a></code></pre></div>
-<h1 id="exercise-more-nqueens-variants">Exercise: more <code>nqueens</code> variants</h1>
+<h1 id="the-end">THE END</h1>
+<div class="sourceCode" id="cb44"><pre class="sourceCode haskell"><code class="sourceCode haskell"></code></pre></div>
+<h1 id="bonus-exercise-more-nqueens-variants">Bonus Exercise: more <code>nqueens</code> variants</h1>
 <p>Rewrite <code>nqueens</code> from last week (using <code>Eval</code>) to use <code>Par</code></p>
 <p>Ditto with <code>forkIO+MVar</code></p>
 <p>Careful with granularity!</p>
-<h1 id="the-end">THE END</h1>
-<div class="sourceCode" id="cb44"><pre class="sourceCode haskell"><code class="sourceCode haskell"></code></pre></div>
-<h1 id="budowanie-abstrakcji-przy-użyciu-mvar-kanały">Budowanie abstrakcji przy użyciu MVar – kanały</h1>
-<p><code>MVar</code>: jednoelementowy bufor/semafor:</p>
-<div class="sourceCode" id="cb45"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb45-1" title="1"><span class="ot">newMVar  ::</span> a <span class="ot">-&gt;</span> <span class="dt">IO</span> (<span class="dt">MVar</span> a)</a>
-<a class="sourceLine" id="cb45-2" title="2"><span class="ot">takeMVar ::</span>  <span class="dt">MVar</span> a <span class="ot">-&gt;</span> <span class="dt">IO</span> a</a>
-<a class="sourceLine" id="cb45-3" title="3"><span class="ot">putMVar  ::</span> <span class="dt">MVar</span> a <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">IO</span> ()</a></code></pre></div>
-<p><code>Chan</code>: nieograniczony bufor (kanał)</p>
-<div class="sourceCode" id="cb46"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb46-1" title="1"><span class="kw">data</span> <span class="dt">Chan</span> a</a>
-<a class="sourceLine" id="cb46-2" title="2"><span class="ot">newChan   ::</span> <span class="dt">IO</span> ( <span class="dt">Chan</span> a )</a>
-<a class="sourceLine" id="cb46-3" title="3"><span class="ot">readChan  ::</span> <span class="dt">Chan</span> a <span class="ot">-&gt;</span> <span class="dt">IO</span> a</a>
-<a class="sourceLine" id="cb46-4" title="4"><span class="ot">writeChan ::</span> <span class="dt">Chan</span> a <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">IO</span> ()</a></code></pre></div>
-<h1 id="asynchroniczne-wyjątki">Asynchroniczne wyjątki</h1>
 </body>
 </html>
