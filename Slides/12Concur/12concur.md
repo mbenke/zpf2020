@@ -678,7 +678,7 @@ $ stack run parnetwork -- +RTS -N2
 
 # Sudoku using `Par`
 
-~~~~ {.haskell}
+``` haskell
 main = do
     [f] <- getArgs
     grids <- fmap lines $ readFile f
@@ -693,12 +693,14 @@ main = do
        as' <- get i1
        bs' <- get i2
        return (as' ++ bs')
+```
 
--- sudoku-par2 +RTS -s  -N1 -RTS ../Marlow/sudoku17.1000.txt
---  Total   time    1.528s  (  1.555s elapsed)
--- sudoku-par2 +RTS -s  -N2 -RTS ../Marlow/sudoku17.1000.txt
---  Total   time    1.600s  (  0.998s elapsed)
-~~~~
+```
+stack run -- sudoku-par2 ../Par/sudoku17.1000.txt +RTS -N1 -s 2>&1 | grep Total
+  Total   time    1.610s  (  1.690s elapsed)
+stack run -- sudoku-par2 ../Par/sudoku17.1000.txt +RTS -N2 -s 2>&1 | grep Total
+  Total   time    1.597s  (  0.998s elapsed)
+```
 
 # parMap
 

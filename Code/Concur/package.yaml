@@ -2,6 +2,7 @@ name: zpf-concur
 
 dependencies:
   - base
+  - array
   - bytestring
   - stm
   - monad-par
@@ -46,3 +47,6 @@ executables:
     main: parmonad.hs
   parnetwork:
     main: parnetwork.hs
+  sudoku-par2:
+    main: sudoku-par2.hs
+    other-modules: Sudoku
