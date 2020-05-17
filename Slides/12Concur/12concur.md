@@ -106,6 +106,8 @@ START 1
 
 # Better
 
+Abstraction: use types, eliminate repetition
+
 ~~~~ {.haskell}
 data Async a = Async (MVar a)
 
@@ -174,9 +176,10 @@ modifyIORef :: IORef a -> (a -> a) -> IO ()
 
 ~~~~ {.haskell}
 incRef :: IORef Int -> IO ()
-incRef var = do { val <- readIORef var
-                ; threadDelay 1000
-       	        ; writeIORef var (val+1) }
+incRef var = do
+  val <- readIORef var
+  threadDelay 1000   -- simulates computation
+  writeIORef var (val+1)
 
 main = do
   px <- newIORef 0
@@ -194,9 +197,10 @@ $ ./IORef1
 
 ~~~~ {.haskell}
 incRef :: IORef Int -> IO ()
-incRef var = do { val <- readIORef var
-                ; threadDelay 1000
-       	        ; writeIORef var (val+1) }
+incRef var = do
+  val <- readIORef var
+  threadDelay 1000   -- simulates computation
+  writeIORef var (val+1)
 
 main = do
   px <- newIORef 0
@@ -214,6 +218,8 @@ $ ./IORef2
 Oops.
 
 # Locking
+
+Standard solution: protect shared resources with locks
 
 ~~~~ {.haskell}
 locking :: IO a -> MVar () -> IO a
@@ -252,6 +258,8 @@ main2 atomically = do
 $ runghc IORef4.hs
 1
 ```
+
+The shared resource can be accessed bypassing locks.
 
 # IORef4.hs
 
@@ -298,7 +306,7 @@ readChan :: Chan a -> IO a
 -- |Read the next value from the Chan.
 ~~~
 
-NB this is available as `Control.Concurrent.Chan` but try to avoid cheating
+NB this is available as `Control.Concurrent.Chan` but try to implement your solution before peeking.
 
 # Bank accounts
 
@@ -347,11 +355,13 @@ transfer from to amount = atomically $ do
 	 withdraw from amount
 ```
 
+Guarantees:
+
 * Atomicity: results of `atomically` are visible to other threads as a whole
 
 * Isolation: during `atomically act`, no interference from other threads
 
-# GIL?
+# Global locks?
 
 Two problems
 
@@ -408,6 +418,8 @@ better not to launch missiles...
 
 # STM
 
+STM is implemented in `Control.Concurrent.STM` (package `stm`)
+
 ~~~~ {.haskell}
 import Control.Concurrent
 import Control.Concurrent.STM
@@ -419,7 +431,7 @@ incRef var = atomically $ do
        	        writeTVar var (val+1+x)
 
 main = do
-  px <- newTVarIO 0
+  px <- newTVarIO 0     -- create top-level TVar
   mapM forkIO $ replicate 20 (incRef px)
   delay (30*baseDelay) `seq` return ()
   atomically (readTVar px) >>= print
@@ -456,10 +468,10 @@ retry :: STM a
 
 limitedWithdraw :: Account -> Int -> STM ()
 limitedWithdraw acc amount = do
-   bal <- readTVar acc
-   if amount > 0 && amount > bal
+   balance <- readTVar acc
+   if amount > balance
       then retry
-      else writeTVar acc (bal - amount)
+      else writeTVar acc (balance - amount)
 ~~~~
 
 When not enough funds, stop the transaction and retry later.
@@ -473,9 +485,9 @@ when one of them changes (here: `amount`).
 ~~~~ {.haskell}
 limitedWithdraw :: Account -> Int -> STM ()
 limitedWithdraw acc amount = do
-   bal <- readTVar acc
-   check $ amount > 0 && amount > bal
-   writeTVar acc (bal - amount)
+   balance <- readTVar acc
+   check (amount > balance)
+   writeTVar acc (balance - amount)
 
 check :: Bool -> STM ()
 check True = return ()
@@ -592,7 +604,10 @@ get :: IVar a -> Par a
 # Example: Fibonacci
 
 ~~~~ {.haskell}
-    runPar $ do
+main = do
+main = do
+  [n,m] <- map read <$> getArgs
+  print $ runPar $ do
       i <- new                          -- <1>
       j <- new                          -- <1>
       fork (put i (fib n))              -- <2>
@@ -657,7 +672,7 @@ main = print $ runNetwork 2
 
 
 ```
-$ ./parnetwork
+$ stack run parnetwork -- +RTS -N2
 (6,9)
 ```
 

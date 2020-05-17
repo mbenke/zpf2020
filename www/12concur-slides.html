@@ -159,6 +159,7 @@ START 1
 </div>
 <div id="better" class="slide section level1">
 <h1>Better</h1>
+<p>Abstraction: use types, eliminate repetition</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb6-1" title="1"><span class="kw">data</span> <span class="dt">Async</span> a <span class="ot">=</span> <span class="dt">Async</span> (<span class="dt">MVar</span> a)</a>
 <a class="sourceLine" id="cb6-2" title="2"></a>
 <a class="sourceLine" id="cb6-3" title="3"><span class="ot">async ::</span> <span class="dt">IO</span> a <span class="ot">-&gt;</span> <span class="dt">IO</span> (<span class="dt">Async</span> a)</a>
@@ -213,37 +214,40 @@ downloaded: http://www.ellatha.com (56521 bytes, 1.42s)</code></pre>
 <a class="sourceLine" id="cb9-4" title="4"><span class="ot">writeIORef ::</span> <span class="dt">IORef</span> a <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">IO</span> ()</a>
 <a class="sourceLine" id="cb9-5" title="5"><span class="ot">modifyIORef ::</span> <span class="dt">IORef</span> a <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> <span class="dt">IO</span> ()</a></code></pre></div>
 <div class="sourceCode" id="cb10"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb10-1" title="1"><span class="ot">incRef ::</span> <span class="dt">IORef</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">IO</span> ()</a>
-<a class="sourceLine" id="cb10-2" title="2">incRef var <span class="ot">=</span> <span class="kw">do</span> { val <span class="ot">&lt;-</span> readIORef var</a>
-<a class="sourceLine" id="cb10-3" title="3">                ; threadDelay <span class="dv">1000</span></a>
-<a class="sourceLine" id="cb10-4" title="4">                ; writeIORef var (val<span class="op">+</span><span class="dv">1</span>) }</a>
-<a class="sourceLine" id="cb10-5" title="5"></a>
-<a class="sourceLine" id="cb10-6" title="6">main <span class="ot">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb10-7" title="7">  px <span class="ot">&lt;-</span> newIORef <span class="dv">0</span></a>
-<a class="sourceLine" id="cb10-8" title="8">  incRef px</a>
+<a class="sourceLine" id="cb10-2" title="2">incRef var <span class="ot">=</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb10-3" title="3">  val <span class="ot">&lt;-</span> readIORef var</a>
+<a class="sourceLine" id="cb10-4" title="4">  threadDelay <span class="dv">1000</span>   <span class="co">-- simulates computation</span></a>
+<a class="sourceLine" id="cb10-5" title="5">  writeIORef var (val<span class="op">+</span><span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb10-6" title="6"></a>
+<a class="sourceLine" id="cb10-7" title="7">main <span class="ot">=</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb10-8" title="8">  px <span class="ot">&lt;-</span> newIORef <span class="dv">0</span></a>
 <a class="sourceLine" id="cb10-9" title="9">  incRef px</a>
-<a class="sourceLine" id="cb10-10" title="10">  readIORef px <span class="op">&gt;&gt;=</span> <span class="fu">print</span></a></code></pre></div>
+<a class="sourceLine" id="cb10-10" title="10">  incRef px</a>
+<a class="sourceLine" id="cb10-11" title="11">  readIORef px <span class="op">&gt;&gt;=</span> <span class="fu">print</span></a></code></pre></div>
 <pre><code>$ ./IORef1
 2</code></pre>
 </div>
 <div id="concurrently" class="slide section level1">
 <h1>Concurrently?</h1>
 <div class="sourceCode" id="cb12"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb12-1" title="1"><span class="ot">incRef ::</span> <span class="dt">IORef</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">IO</span> ()</a>
-<a class="sourceLine" id="cb12-2" title="2">incRef var <span class="ot">=</span> <span class="kw">do</span> { val <span class="ot">&lt;-</span> readIORef var</a>
-<a class="sourceLine" id="cb12-3" title="3">                ; threadDelay <span class="dv">1000</span></a>
-<a class="sourceLine" id="cb12-4" title="4">                ; writeIORef var (val<span class="op">+</span><span class="dv">1</span>) }</a>
-<a class="sourceLine" id="cb12-5" title="5"></a>
-<a class="sourceLine" id="cb12-6" title="6">main <span class="ot">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb12-7" title="7">  px <span class="ot">&lt;-</span> newIORef <span class="dv">0</span></a>
-<a class="sourceLine" id="cb12-8" title="8">  forkIO <span class="op">$</span> incRef px</a>
+<a class="sourceLine" id="cb12-2" title="2">incRef var <span class="ot">=</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb12-3" title="3">  val <span class="ot">&lt;-</span> readIORef var</a>
+<a class="sourceLine" id="cb12-4" title="4">  threadDelay <span class="dv">1000</span>   <span class="co">-- simulates computation</span></a>
+<a class="sourceLine" id="cb12-5" title="5">  writeIORef var (val<span class="op">+</span><span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb12-6" title="6"></a>
+<a class="sourceLine" id="cb12-7" title="7">main <span class="ot">=</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb12-8" title="8">  px <span class="ot">&lt;-</span> newIORef <span class="dv">0</span></a>
 <a class="sourceLine" id="cb12-9" title="9">  forkIO <span class="op">$</span> incRef px</a>
-<a class="sourceLine" id="cb12-10" title="10">  threadDelay <span class="dv">3000</span></a>
-<a class="sourceLine" id="cb12-11" title="11">  readIORef px <span class="op">&gt;&gt;=</span> <span class="fu">print</span></a></code></pre></div>
+<a class="sourceLine" id="cb12-10" title="10">  forkIO <span class="op">$</span> incRef px</a>
+<a class="sourceLine" id="cb12-11" title="11">  threadDelay <span class="dv">3000</span></a>
+<a class="sourceLine" id="cb12-12" title="12">  readIORef px <span class="op">&gt;&gt;=</span> <span class="fu">print</span></a></code></pre></div>
 <pre><code>$ ./IORef2
 1</code></pre>
 <p>Oops.</p>
 </div>
 <div id="locking" class="slide section level1">
 <h1>Locking</h1>
+<p>Standard solution: protect shared resources with locks</p>
 <div class="sourceCode" id="cb14"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb14-1" title="1"><span class="ot">locking ::</span> <span class="dt">IO</span> a <span class="ot">-&gt;</span> <span class="dt">MVar</span> () <span class="ot">-&gt;</span> <span class="dt">IO</span> a</a>
 <a class="sourceLine" id="cb14-2" title="2">action <span class="ot">`locking`</span> l <span class="ot">=</span> lock l <span class="op">&gt;&gt;</span> (action <span class="op">&lt;*</span> unlock l)</a>
 <a class="sourceLine" id="cb14-3" title="3"></a>
@@ -271,6 +275,7 @@ downloaded: http://www.ellatha.com (56521 bytes, 1.42s)</code></pre>
 <a class="sourceLine" id="cb16-6" title="6">  readIORef px <span class="op">&gt;&gt;=</span> <span class="fu">print</span></a></code></pre></div>
 <pre><code>$ runghc IORef4.hs
 1</code></pre>
+<p>The shared resource can be accessed bypassing locks.</p>
 </div>
 <div id="ioref4.hs" class="slide section level1">
 <h1>IORef4.hs</h1>
@@ -310,7 +315,7 @@ writeChan :: Chan a -&gt; a -&gt; IO ()
 
 readChan :: Chan a -&gt; IO a
 -- |Read the next value from the Chan.</code></pre>
-<p>NB this is available as <code>Control.Concurrent.Chan</code> but try to avoid cheating</p>
+<p>NB this is available as <code>Control.Concurrent.Chan</code> but try to implement your solution before peeking.</p>
 </div>
 <div id="bank-accounts" class="slide section level1">
 <h1>Bank accounts</h1>
@@ -344,13 +349,14 @@ else { to.lock(); from.lock(); }</code></pre>
 transfer from to amount = atomically $ do
      deposit to amount
      withdraw from amount</code></pre>
+<p>Guarantees:</p>
 <ul>
 <li><p>Atomicity: results of <code>atomically</code> are visible to other threads as a whole</p></li>
 <li><p>Isolation: during <code>atomically act</code>, no interference from other threads</p></li>
 </ul>
 </div>
-<div id="gil" class="slide section level1">
-<h1>GIL?</h1>
+<div id="global-locks" class="slide section level1">
+<h1>Global locks?</h1>
 <p>Two problems</p>
 <ul>
 <li><p>one we have seen already: no isolation guarantee</p></li>
@@ -392,6 +398,7 @@ transfer from to amount = atomically $ do
 </div>
 <div id="stm" class="slide section level1">
 <h1>STM</h1>
+<p>STM is implemented in <code>Control.Concurrent.STM</code> (package <code>stm</code>)</p>
 <div class="sourceCode" id="cb27"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb27-1" title="1"><span class="kw">import</span> <span class="dt">Control.Concurrent</span></a>
 <a class="sourceLine" id="cb27-2" title="2"><span class="kw">import</span> <span class="dt">Control.Concurrent.STM</span></a>
 <a class="sourceLine" id="cb27-3" title="3"></a>
@@ -402,7 +409,7 @@ transfer from to amount = atomically $ do
 <a class="sourceLine" id="cb27-8" title="8">                writeTVar var (val<span class="op">+</span><span class="dv">1</span><span class="op">+</span>x)</a>
 <a class="sourceLine" id="cb27-9" title="9"></a>
 <a class="sourceLine" id="cb27-10" title="10">main <span class="ot">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb27-11" title="11">  px <span class="ot">&lt;-</span> newTVarIO <span class="dv">0</span></a>
+<a class="sourceLine" id="cb27-11" title="11">  px <span class="ot">&lt;-</span> newTVarIO <span class="dv">0</span>     <span class="co">-- create top-level TVar</span></a>
 <a class="sourceLine" id="cb27-12" title="12">  <span class="fu">mapM</span> forkIO <span class="op">$</span> <span class="fu">replicate</span> <span class="dv">20</span> (incRef px)</a>
 <a class="sourceLine" id="cb27-13" title="13">  delay (<span class="dv">30</span><span class="op">*</span>baseDelay) <span class="ot">`seq`</span> <span class="fu">return</span> ()</a>
 <a class="sourceLine" id="cb27-14" title="14">  atomically (readTVar px) <span class="op">&gt;&gt;=</span> <span class="fu">print</span></a></code></pre></div>
@@ -430,10 +437,10 @@ delay n = delay $! n-1
 <a class="sourceLine" id="cb30-2" title="2"></a>
 <a class="sourceLine" id="cb30-3" title="3"><span class="ot">limitedWithdraw ::</span> <span class="dt">Account</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">STM</span> ()</a>
 <a class="sourceLine" id="cb30-4" title="4">limitedWithdraw acc amount <span class="ot">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb30-5" title="5">   bal <span class="ot">&lt;-</span> readTVar acc</a>
-<a class="sourceLine" id="cb30-6" title="6">   <span class="kw">if</span> amount <span class="op">&gt;</span> <span class="dv">0</span> <span class="op">&amp;&amp;</span> amount <span class="op">&gt;</span> bal</a>
+<a class="sourceLine" id="cb30-5" title="5">   balance <span class="ot">&lt;-</span> readTVar acc</a>
+<a class="sourceLine" id="cb30-6" title="6">   <span class="kw">if</span> amount <span class="op">&gt;</span> balance</a>
 <a class="sourceLine" id="cb30-7" title="7">      <span class="kw">then</span> retry</a>
-<a class="sourceLine" id="cb30-8" title="8">      <span class="kw">else</span> writeTVar acc (bal <span class="op">-</span> amount)</a></code></pre></div>
+<a class="sourceLine" id="cb30-8" title="8">      <span class="kw">else</span> writeTVar acc (balance <span class="op">-</span> amount)</a></code></pre></div>
 <p>When not enough funds, stop the transaction and retry later.</p>
 <p>The system knows which variables are read and can retry when one of them changes (here: <code>amount</code>).</p>
 </div>
@@ -441,9 +448,9 @@ delay n = delay $! n-1
 <h1>Better: <code>check</code></h1>
 <div class="sourceCode" id="cb31"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb31-1" title="1"><span class="ot">limitedWithdraw ::</span> <span class="dt">Account</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">STM</span> ()</a>
 <a class="sourceLine" id="cb31-2" title="2">limitedWithdraw acc amount <span class="ot">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb31-3" title="3">   bal <span class="ot">&lt;-</span> readTVar acc</a>
-<a class="sourceLine" id="cb31-4" title="4">   check <span class="op">$</span> amount <span class="op">&gt;</span> <span class="dv">0</span> <span class="op">&amp;&amp;</span> amount <span class="op">&gt;</span> bal</a>
-<a class="sourceLine" id="cb31-5" title="5">   writeTVar acc (bal <span class="op">-</span> amount)</a>
+<a class="sourceLine" id="cb31-3" title="3">   balance <span class="ot">&lt;-</span> readTVar acc</a>
+<a class="sourceLine" id="cb31-4" title="4">   check (amount <span class="op">&gt;</span> balance)</a>
+<a class="sourceLine" id="cb31-5" title="5">   writeTVar acc (balance <span class="op">-</span> amount)</a>
 <a class="sourceLine" id="cb31-6" title="6"></a>
 <a class="sourceLine" id="cb31-7" title="7"><span class="ot">check ::</span> <span class="dt">Bool</span> <span class="ot">-&gt;</span> <span class="dt">STM</span> ()</a>
 <a class="sourceLine" id="cb31-8" title="8">check <span class="dt">True</span> <span class="ot">=</span> <span class="fu">return</span> ()</a>
@@ -528,14 +535,17 @@ delay n = delay $! n-1
 </div>
 <div id="example-fibonacci" class="slide section level1">
 <h1>Example: Fibonacci</h1>
-<div class="sourceCode" id="cb38"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb38-1" title="1">    runPar <span class="op">$</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb38-2" title="2">      i <span class="ot">&lt;-</span> new                          <span class="co">-- &lt;1&gt;</span></a>
-<a class="sourceLine" id="cb38-3" title="3">      j <span class="ot">&lt;-</span> new                          <span class="co">-- &lt;1&gt;</span></a>
-<a class="sourceLine" id="cb38-4" title="4">      fork (put i (fib n))              <span class="co">-- &lt;2&gt;</span></a>
-<a class="sourceLine" id="cb38-5" title="5">      fork (put j (fib m))              <span class="co">-- &lt;2&gt;</span></a>
-<a class="sourceLine" id="cb38-6" title="6">      a <span class="ot">&lt;-</span> get i                        <span class="co">-- &lt;3&gt;</span></a>
-<a class="sourceLine" id="cb38-7" title="7">      b <span class="ot">&lt;-</span> get j                        <span class="co">-- &lt;3&gt;</span></a>
-<a class="sourceLine" id="cb38-8" title="8">      <span class="fu">return</span> (a<span class="op">+</span>b)                      <span class="co">-- &lt;4&gt;</span></a></code></pre></div>
+<div class="sourceCode" id="cb38"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb38-1" title="1">main <span class="ot">=</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb38-2" title="2">main <span class="ot">=</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb38-3" title="3">  [n,m] <span class="ot">&lt;-</span> <span class="fu">map</span> <span class="fu">read</span> <span class="op">&lt;$&gt;</span> getArgs</a>
+<a class="sourceLine" id="cb38-4" title="4">  <span class="fu">print</span> <span class="op">$</span> runPar <span class="op">$</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb38-5" title="5">      i <span class="ot">&lt;-</span> new                          <span class="co">-- &lt;1&gt;</span></a>
+<a class="sourceLine" id="cb38-6" title="6">      j <span class="ot">&lt;-</span> new                          <span class="co">-- &lt;1&gt;</span></a>
+<a class="sourceLine" id="cb38-7" title="7">      fork (put i (fib n))              <span class="co">-- &lt;2&gt;</span></a>
+<a class="sourceLine" id="cb38-8" title="8">      fork (put j (fib m))              <span class="co">-- &lt;2&gt;</span></a>
+<a class="sourceLine" id="cb38-9" title="9">      a <span class="ot">&lt;-</span> get i                        <span class="co">-- &lt;3&gt;</span></a>
+<a class="sourceLine" id="cb38-10" title="10">      b <span class="ot">&lt;-</span> get j                        <span class="co">-- &lt;3&gt;</span></a>
+<a class="sourceLine" id="cb38-11" title="11">      <span class="fu">return</span> (a<span class="op">+</span>b)                      <span class="co">-- &lt;4&gt;</span></a></code></pre></div>
 <p>1: create two new <code>IVar</code>s to hold the results</p>
 <p>2: fork two independent <code>Par</code> computations</p>
 <p>3: wait for the results</p>
@@ -575,7 +585,7 @@ delay n = delay $! n-1
 <a class="sourceLine" id="cb40-20" title="20">h x <span class="ot">=</span> x<span class="op">*</span>x</a>
 <a class="sourceLine" id="cb40-21" title="21">j <span class="ot">=</span> (,)</a>
 <a class="sourceLine" id="cb40-22" title="22">main <span class="ot">=</span> <span class="fu">print</span> <span class="op">$</span> runNetwork <span class="dv">2</span></a></code></pre></div>
-<pre><code>$ ./parnetwork
+<pre><code>$ stack run parnetwork -- +RTS -N2
 (6,9)</code></pre>
 </div>
 <div id="sudoku-using-par" class="slide section level1">
