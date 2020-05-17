@@ -9,8 +9,7 @@ fib n = fib (n-1) + fib (n-2)
 -- >>
 
 main = do
-  args <- getArgs
-  let [n,m] = map read args
+  [n,m] <- map read <$> getArgs
   print $
 -- <<runPar
     runPar $ do
