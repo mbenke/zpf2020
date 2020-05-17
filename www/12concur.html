@@ -110,7 +110,10 @@ BABABABABABABABABABABABABABABABABABABABABABBBBBBBBBBBB</code></pre>
 <a class="sourceLine" id="cb3-2" title="2"><span class="ot">newMVar  ::</span> a <span class="ot">-&gt;</span> <span class="dt">IO</span> (<span class="dt">MVar</span> a)</a>
 <a class="sourceLine" id="cb3-3" title="3"><span class="ot">takeMVar ::</span>  <span class="dt">MVar</span> a <span class="ot">-&gt;</span> <span class="dt">IO</span> a</a>
 <a class="sourceLine" id="cb3-4" title="4"><span class="ot">putMVar  ::</span> <span class="dt">MVar</span> a <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">IO</span> ()</a>
-<a class="sourceLine" id="cb3-5" title="5"><span class="ot">readMVar ::</span> <span class="dt">MVar</span> a <span class="ot">-&gt;</span> <span class="dt">IO</span> a  <span class="co">--  Atomic read</span></a></code></pre></div>
+<a class="sourceLine" id="cb3-5" title="5"><span class="ot">readMVar ::</span> <span class="dt">MVar</span> a <span class="ot">-&gt;</span> <span class="dt">IO</span> a  <span class="co">--  Atomic read</span></a>
+<a class="sourceLine" id="cb3-6" title="6"></a>
+<a class="sourceLine" id="cb3-7" title="7"><span class="ot">tryTakeMVar ::</span> <span class="dt">MVar</span> a <span class="ot">-&gt;</span> <span class="dt">IO</span> (<span class="dt">Maybe</span> a) <span class="co">-- nonblocking</span></a>
+<a class="sourceLine" id="cb3-8" title="8"><span class="ot">tyyPutMVar  ::</span> <span class="dt">MVar</span> a <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">IO</span> <span class="dt">Bool</span></a></code></pre></div>
 <p><code>stdout</code> is guarded by an <code>MVar</code>, hence <code>A</code> and <code>B</code> in the previous example come more or less evenly.</p>
 <ul>
 <li><code>takeMVar</code> is single-wakeup. That is, if there are multiple threads blocked in <code>takeMVar</code>, and the <code>MVar</code> becomes full, only one thread will be woken up. The runtime guarantees that the woken thread completes its <code>takeMVar</code> operation.</li>
