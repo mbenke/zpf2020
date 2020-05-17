@@ -704,30 +704,36 @@ stack run -- sudoku-par2 ../Par/sudoku17.1000.txt +RTS -N2 -s 2>&1 | grep Total
 
 # parMap
 
-~~~~ {.haskell}
+``` haskell
 spawn :: NFData a => Par a -> Par (IVar a)
 spawn p = do
       i <- new
       fork (p >>= put i)
       return i
 
-parMapM f as = do
-	ibs <- mapM (spawn . f) as
-	mapM get ibs
+spawnP :: NFData a => a -> Par (IVar a)   -- for pure computations
 
--- Control.Monad.Par.parMap
+parMap f as = do
+	ibs <- mapM (spawnP . f) as
+	mapM get ibs
+```
+
+```haskell
+import Control.Monad.Par
 main = do
     [f] <- getArgs
     grids <- fmap lines $ readFile f
     print (length (filter isJust (runPar $ parMap solve grids)))
+```
 
--- sudoku-par3 +RTS -s  -N1 -RTS ../Marlow/sudoku17.1000.txt
---   Total   time    1.536s  (  1.577s elapsed)
--- sudoku-par3 +RTS -s  -N2 -RTS ../Marlow/sudoku17.1000.txt
---   Total   time    1.603s  (  0.825s elapsed)
-~~~~
+```
+$ stack run -- sudoku-par3 ../Par/sudoku17.1000.txt +RTS -N1 -s 2>&1 | grep Total
+  Total   time    1.561s  (  1.613s elapsed)
+$ stack run -- sudoku-par3 ../Par/sudoku17.1000.txt +RTS -N2 -s 2>&1 | grep Total
+  Total   time    1.575s  (  0.810s elapsed)
+```
 
-# THE END
+# Questions?
 
 ~~~~ {.haskell}
 

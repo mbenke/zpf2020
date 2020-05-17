@@ -50,3 +50,6 @@ executables:
   sudoku-par2:
     main: sudoku-par2.hs
     other-modules: Sudoku
+  sudoku-par3:
+    main: sudoku-par3.hs
+    other-modules: Sudoku

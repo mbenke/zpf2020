@@ -547,22 +547,22 @@ stack run -- sudoku-par2 ../Par/sudoku17.1000.txt +RTS -N2 -s 2&gt;&amp;1 | grep
 <a class="sourceLine" id="cb44-4" title="4">      fork (p <span class="op">&gt;&gt;=</span> put i)</a>
 <a class="sourceLine" id="cb44-5" title="5">      <span class="fu">return</span> i</a>
 <a class="sourceLine" id="cb44-6" title="6"></a>
-<a class="sourceLine" id="cb44-7" title="7">parMapM f as <span class="ot">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb44-8" title="8">    ibs <span class="ot">&lt;-</span> <span class="fu">mapM</span> (spawn <span class="op">.</span> f) as</a>
-<a class="sourceLine" id="cb44-9" title="9">    <span class="fu">mapM</span> get ibs</a>
-<a class="sourceLine" id="cb44-10" title="10"></a>
-<a class="sourceLine" id="cb44-11" title="11"><span class="co">-- Control.Monad.Par.parMap</span></a>
-<a class="sourceLine" id="cb44-12" title="12">main <span class="ot">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb44-13" title="13">    [f] <span class="ot">&lt;-</span> getArgs</a>
-<a class="sourceLine" id="cb44-14" title="14">    grids <span class="ot">&lt;-</span> <span class="fu">fmap</span> <span class="fu">lines</span> <span class="op">$</span> <span class="fu">readFile</span> f</a>
-<a class="sourceLine" id="cb44-15" title="15">    <span class="fu">print</span> (<span class="fu">length</span> (<span class="fu">filter</span> isJust (runPar <span class="op">$</span> parMap solve grids)))</a>
-<a class="sourceLine" id="cb44-16" title="16"></a>
-<a class="sourceLine" id="cb44-17" title="17"><span class="co">-- sudoku-par3 +RTS -s  -N1 -RTS ../Marlow/sudoku17.1000.txt</span></a>
-<a class="sourceLine" id="cb44-18" title="18"><span class="co">--   Total   time    1.536s  (  1.577s elapsed)</span></a>
-<a class="sourceLine" id="cb44-19" title="19"><span class="co">-- sudoku-par3 +RTS -s  -N2 -RTS ../Marlow/sudoku17.1000.txt</span></a>
-<a class="sourceLine" id="cb44-20" title="20"><span class="co">--   Total   time    1.603s  (  0.825s elapsed)</span></a></code></pre></div>
-<h1 id="the-end">THE END</h1>
-<div class="sourceCode" id="cb45"><pre class="sourceCode haskell"><code class="sourceCode haskell"></code></pre></div>
+<a class="sourceLine" id="cb44-7" title="7"><span class="ot">spawnP ::</span> <span class="dt">NFData</span> a <span class="ot">=&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">Par</span> (<span class="dt">IVar</span> a)</a>
+<a class="sourceLine" id="cb44-8" title="8"></a>
+<a class="sourceLine" id="cb44-9" title="9">parMap f as <span class="ot">=</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb44-10" title="10">    ibs <span class="ot">&lt;-</span> <span class="fu">mapM</span> (spawnP <span class="op">.</span> f) as</a>
+<a class="sourceLine" id="cb44-11" title="11">    <span class="fu">mapM</span> get ibs</a></code></pre></div>
+<div class="sourceCode" id="cb45"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb45-1" title="1"><span class="kw">import</span> <span class="dt">Control.Monad.Par</span></a>
+<a class="sourceLine" id="cb45-2" title="2">main <span class="ot">=</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb45-3" title="3">    [f] <span class="ot">&lt;-</span> getArgs</a>
+<a class="sourceLine" id="cb45-4" title="4">    grids <span class="ot">&lt;-</span> <span class="fu">fmap</span> <span class="fu">lines</span> <span class="op">$</span> <span class="fu">readFile</span> f</a>
+<a class="sourceLine" id="cb45-5" title="5">    <span class="fu">print</span> (<span class="fu">length</span> (<span class="fu">filter</span> isJust (runPar <span class="op">$</span> parMap solve grids)))</a></code></pre></div>
+<pre><code>$ stack run -- sudoku-par3 ../Par/sudoku17.1000.txt +RTS -N1 -s 2&gt;&amp;1 | grep Total
+  Total   time    1.561s  (  1.613s elapsed)
+$ stack run -- sudoku-par3 ../Par/sudoku17.1000.txt +RTS -N2 -s 2&gt;&amp;1 | grep Total
+  Total   time    1.575s  (  0.810s elapsed)</code></pre>
+<h1 id="questions">Questions?</h1>
+<div class="sourceCode" id="cb47"><pre class="sourceCode haskell"><code class="sourceCode haskell"></code></pre></div>
 <h1 id="bonus-exercise-more-nqueens-variants">Bonus Exercise: more <code>nqueens</code> variants</h1>
 <p>Rewrite <code>nqueens</code> from last week (using <code>Eval</code>) to use <code>Par</code></p>
 <p>Ditto with <code>forkIO+MVar</code></p>
