@@ -22,6 +22,12 @@ executables:
   geturls3:
     main: geturls3.hs
     other-modules: GetURL, TimeIt
+  geturls4:
+    main: geturls4.hs
+    other-modules: GetHTTPS, TimeIt
+    dependencies:
+      - http-client
+      - http-client-tls
   stm1:
     main: stm1.hs
   delay:
