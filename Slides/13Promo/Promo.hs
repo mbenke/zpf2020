@@ -108,6 +108,8 @@ vchop1 _ = undefined
 -- | Chop a vector in two, using first argument as a measure
 -- >>> vchop2 (undefined :> V0) (1 :> 2 :> V0)
 -- (1 :> V0,2 :> V0)
+-- NB if we had `vreplicate`, we might write
+-- vchop2 (vreplicate (S Z) undefined) (1 :> 2 :> V0)
 vchop2 :: Vec m x -> Vec (m :+ n) a -> (Vec m a, Vec n a)
 vchop2 V0 xs = (V0, xs)
 vchop2 (_:>m) (x:>xs) = (x:>ys, zs) where

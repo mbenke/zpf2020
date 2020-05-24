@@ -326,39 +326,46 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
 <a class="sourceLine" id="cb28-2" title="2"><span class="ot">vchop1 ::</span> <span class="dt">Vec</span> (m <span class="op">:+</span> n) a <span class="ot">-&gt;</span> (<span class="dt">Vec</span> m a, <span class="dt">Vec</span> n a)</a>
 <a class="sourceLine" id="cb28-3" title="3">vchop1 _ _ <span class="ot">=</span> <span class="fu">undefined</span></a></code></pre></div>
 <p>Can we at least write a test for it?</p>
+<pre><code>-- &gt;&gt;&gt; vchop1 (1 :&gt; 2 :&gt; V0)
+-- ???</code></pre>
+<h1 id="vchop2">vchop2</h1>
 <p>We need to count to <code>m</code>. Here’s an ugly solution:</p>
-<div class="sourceCode" id="cb29"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb29-1" title="1"><span class="co">-- | Chop a vector in two, using first argument as a measure</span></a>
-<a class="sourceLine" id="cb29-2" title="2"><span class="co">-- &gt;&gt;&gt; vchop2 (Vcons undefined V0) (Vcons 1 (Vcons 2 V0))</span></a>
-<a class="sourceLine" id="cb29-3" title="3"><span class="co">-- (Vcons 1 V0,Vcons 2 V0)</span></a>
-<a class="sourceLine" id="cb29-4" title="4"><span class="ot">vchop2 ::</span> <span class="dt">Vec</span> m x <span class="ot">-&gt;</span> <span class="dt">Vec</span> (m <span class="op">:+</span> n) a <span class="ot">-&gt;</span> (<span class="dt">Vec</span> m a, <span class="dt">Vec</span> n a)</a>
-<a class="sourceLine" id="cb29-5" title="5">vchop2 <span class="dt">V0</span> xs <span class="ot">=</span> (<span class="dt">V0</span>, xs)</a>
-<a class="sourceLine" id="cb29-6" title="6">vchop2 (<span class="dt">Vcons</span> _ m) (<span class="dt">Vcons</span> x xs) <span class="ot">=</span> (<span class="dt">Vcons</span> x ys, zs) <span class="kw">where</span></a>
-<a class="sourceLine" id="cb29-7" title="7">  (ys, zs) <span class="ot">=</span> vchop2 m xs</a></code></pre></div>
+<div class="sourceCode" id="cb30"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb30-1" title="1"><span class="co">-- | Chop a vector in two, using first argument as a measure</span></a>
+<a class="sourceLine" id="cb30-2" title="2"><span class="co">-- &gt;&gt;&gt; vchop2 (undefined :&gt; V0) (1 :&gt; 2 :&gt; V0)</span></a>
+<a class="sourceLine" id="cb30-3" title="3"><span class="co">-- (1 :&gt; V0,2 :&gt; V0)</span></a>
+<a class="sourceLine" id="cb30-4" title="4"></a>
+<a class="sourceLine" id="cb30-5" title="5"><span class="co">-- NB if we had `vreplicate`, we might write</span></a>
+<a class="sourceLine" id="cb30-6" title="6"><span class="co">-- vchop2 (vreplicate (S Z) undefined) (1 :&gt; 2 :&gt; V0)</span></a>
+<a class="sourceLine" id="cb30-7" title="7"></a>
+<a class="sourceLine" id="cb30-8" title="8"><span class="ot">vchop2 ::</span> <span class="dt">Vec</span> m x <span class="ot">-&gt;</span> <span class="dt">Vec</span> (m <span class="op">:+</span> n) a <span class="ot">-&gt;</span> (<span class="dt">Vec</span> m a, <span class="dt">Vec</span> n a)</a>
+<a class="sourceLine" id="cb30-9" title="9">vchop2 <span class="dt">V0</span> xs <span class="ot">=</span> (<span class="dt">V0</span>, xs)</a>
+<a class="sourceLine" id="cb30-10" title="10">vchop2 (_<span class="op">:&gt;</span>m) (x<span class="op">:&gt;</span>xs) <span class="ot">=</span> (x<span class="op">:&gt;</span>ys, zs) <span class="kw">where</span></a>
+<a class="sourceLine" id="cb30-11" title="11">  (ys, zs) <span class="ot">=</span> vchop2 m xs</a></code></pre></div>
 <h1 id="singleton">Singleton</h1>
 <p>Usin a vector is an overkill, we need just its length.</p>
 <p>But <code>Nat</code> is not precise enough, we have <code>Z :: Nat</code>, but woud like <code>Zero :: SNat Z</code></p>
 <p>Idea: create a representant of every element of kind Nat</p>
-<div class="sourceCode" id="cb30"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb30-1" title="1"><span class="kw">data</span> <span class="dt">SNat</span> (<span class="ot">n::</span><span class="dt">Nat</span>) <span class="kw">where</span></a>
-<a class="sourceLine" id="cb30-2" title="2">  <span class="dt">SZ</span><span class="ot"> ::</span> <span class="dt">SNat</span> <span class="dt">Z</span></a>
-<a class="sourceLine" id="cb30-3" title="3">  <span class="dt">SS</span><span class="ot"> ::</span> <span class="dt">SNat</span> n <span class="ot">-&gt;</span> <span class="dt">SNat</span> (<span class="dt">S</span> n)</a>
-<a class="sourceLine" id="cb30-4" title="4"><span class="kw">deriving</span> <span class="kw">instance</span> <span class="dt">Show</span>(<span class="dt">SNat</span> n)</a>
-<a class="sourceLine" id="cb30-5" title="5"></a>
-<a class="sourceLine" id="cb30-6" title="6"><span class="ot">add ::</span> (<span class="dt">SNat</span> m) <span class="ot">-&gt;</span> (<span class="dt">SNat</span> n) <span class="ot">-&gt;</span> <span class="dt">SNat</span>(m <span class="op">:+</span> n)</a>
-<a class="sourceLine" id="cb30-7" title="7">add <span class="dt">SZ</span> n <span class="ot">=</span> n</a>
-<a class="sourceLine" id="cb30-8" title="8">add (<span class="dt">SS</span> m) n <span class="ot">=</span> <span class="dt">SS</span> (add m n)</a></code></pre></div>
+<div class="sourceCode" id="cb31"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb31-1" title="1"><span class="kw">data</span> <span class="dt">SNat</span> (<span class="ot">n::</span><span class="dt">Nat</span>) <span class="kw">where</span></a>
+<a class="sourceLine" id="cb31-2" title="2">  <span class="dt">SZ</span><span class="ot"> ::</span> <span class="dt">SNat</span> <span class="dt">Z</span></a>
+<a class="sourceLine" id="cb31-3" title="3">  <span class="dt">SS</span><span class="ot"> ::</span> <span class="dt">SNat</span> n <span class="ot">-&gt;</span> <span class="dt">SNat</span> (<span class="dt">S</span> n)</a>
+<a class="sourceLine" id="cb31-4" title="4"><span class="kw">deriving</span> <span class="kw">instance</span> <span class="dt">Show</span>(<span class="dt">SNat</span> n)</a>
+<a class="sourceLine" id="cb31-5" title="5"></a>
+<a class="sourceLine" id="cb31-6" title="6"><span class="ot">add ::</span> (<span class="dt">SNat</span> m) <span class="ot">-&gt;</span> (<span class="dt">SNat</span> n) <span class="ot">-&gt;</span> <span class="dt">SNat</span>(m <span class="op">:+</span> n)</a>
+<a class="sourceLine" id="cb31-7" title="7">add <span class="dt">SZ</span> n <span class="ot">=</span> n</a>
+<a class="sourceLine" id="cb31-8" title="8">add (<span class="dt">SS</span> m) n <span class="ot">=</span> <span class="dt">SS</span> (add m n)</a></code></pre></div>
 <p><strong>Exercise:</strong> define multiplication</p>
-<div class="sourceCode" id="cb31"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb31-1" title="1"><span class="ot">mul ::</span> (<span class="dt">SNat</span> m) <span class="ot">-&gt;</span> (<span class="dt">SNat</span> n) <span class="ot">-&gt;</span> <span class="dt">SNat</span>(m <span class="op">:*</span> n)</a></code></pre></div>
+<div class="sourceCode" id="cb32"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb32-1" title="1"><span class="ot">mul ::</span> (<span class="dt">SNat</span> m) <span class="ot">-&gt;</span> (<span class="dt">SNat</span> n) <span class="ot">-&gt;</span> <span class="dt">SNat</span>(m <span class="op">:*</span> n)</a></code></pre></div>
 <h1 id="comparisons-and-another-way-of-vector-indexing">Comparisons and another way of vector indexing</h1>
-<div class="sourceCode" id="cb32"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb32-1" title="1"><span class="co">-- # Comparison</span></a>
-<a class="sourceLine" id="cb32-2" title="2"><span class="kw">type</span> <span class="kw">family</span> (<span class="ot">m::</span><span class="dt">Nat</span>) <span class="op">:&lt;</span> (<span class="ot">n::</span><span class="dt">Nat</span>)<span class="ot"> ::</span> <span class="dt">Bool</span></a>
-<a class="sourceLine" id="cb32-3" title="3"><span class="kw">type</span> <span class="kw">instance</span> m <span class="op">:&lt;</span> <span class="dt">&#39;Z</span> <span class="ot">=</span> <span class="dt">&#39;False</span></a>
-<a class="sourceLine" id="cb32-4" title="4"><span class="kw">type</span> <span class="kw">instance</span> <span class="dt">&#39;Z</span> <span class="op">:&lt;</span> (<span class="dt">&#39;S</span> n) <span class="ot">=</span> <span class="dt">&#39;True</span></a>
-<a class="sourceLine" id="cb32-5" title="5"><span class="kw">type</span> <span class="kw">instance</span> (<span class="dt">&#39;S</span> m) <span class="op">:&lt;</span> (<span class="dt">&#39;S</span> n) <span class="ot">=</span> m <span class="op">:&lt;</span> n</a>
-<a class="sourceLine" id="cb32-6" title="6"></a>
-<a class="sourceLine" id="cb32-7" title="7"><span class="co">-- nth</span></a>
-<a class="sourceLine" id="cb32-8" title="8"><span class="ot">nth ::</span> (m<span class="op">:&lt;</span>n) <span class="op">~</span> <span class="dt">&#39;True</span> <span class="ot">=&gt;</span> <span class="dt">SNat</span> m <span class="ot">-&gt;</span> <span class="dt">Vec</span> n a <span class="ot">-&gt;</span> a</a>
-<a class="sourceLine" id="cb32-9" title="9">nth <span class="dt">SZ</span> (a<span class="op">:&gt;</span>_)  <span class="ot">=</span> a</a>
-<a class="sourceLine" id="cb32-10" title="10">nth (<span class="dt">SS</span> m&#39;) (_<span class="op">:&gt;</span>xs) <span class="ot">=</span> nth m&#39; xs</a></code></pre></div>
+<div class="sourceCode" id="cb33"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb33-1" title="1"><span class="co">-- # Comparison</span></a>
+<a class="sourceLine" id="cb33-2" title="2"><span class="kw">type</span> <span class="kw">family</span> (<span class="ot">m::</span><span class="dt">Nat</span>) <span class="op">:&lt;</span> (<span class="ot">n::</span><span class="dt">Nat</span>)<span class="ot"> ::</span> <span class="dt">Bool</span></a>
+<a class="sourceLine" id="cb33-3" title="3"><span class="kw">type</span> <span class="kw">instance</span> m <span class="op">:&lt;</span> <span class="dt">&#39;Z</span> <span class="ot">=</span> <span class="dt">&#39;False</span></a>
+<a class="sourceLine" id="cb33-4" title="4"><span class="kw">type</span> <span class="kw">instance</span> <span class="dt">&#39;Z</span> <span class="op">:&lt;</span> (<span class="dt">&#39;S</span> n) <span class="ot">=</span> <span class="dt">&#39;True</span></a>
+<a class="sourceLine" id="cb33-5" title="5"><span class="kw">type</span> <span class="kw">instance</span> (<span class="dt">&#39;S</span> m) <span class="op">:&lt;</span> (<span class="dt">&#39;S</span> n) <span class="ot">=</span> m <span class="op">:&lt;</span> n</a>
+<a class="sourceLine" id="cb33-6" title="6"></a>
+<a class="sourceLine" id="cb33-7" title="7"><span class="co">-- nth</span></a>
+<a class="sourceLine" id="cb33-8" title="8"><span class="ot">nth ::</span> (m<span class="op">:&lt;</span>n) <span class="op">~</span> <span class="dt">&#39;True</span> <span class="ot">=&gt;</span> <span class="dt">SNat</span> m <span class="ot">-&gt;</span> <span class="dt">Vec</span> n a <span class="ot">-&gt;</span> a</a>
+<a class="sourceLine" id="cb33-9" title="9">nth <span class="dt">SZ</span> (a<span class="op">:&gt;</span>_)  <span class="ot">=</span> a</a>
+<a class="sourceLine" id="cb33-10" title="10">nth (<span class="dt">SS</span> m&#39;) (_<span class="op">:&gt;</span>xs) <span class="ot">=</span> nth m&#39; xs</a></code></pre></div>
 <p>Apart from ordinary class constraints, we may use equality constraints.</p>
 <p><code>(m:&lt;n) ~ 'True</code> is ane example of such a constraint</p>
 <p><code>nth</code> typechecks without this constraint, but so does <code>nth SZ V0</code> which is unsafe.</p>
@@ -368,32 +375,32 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
         arising from a use of ‘nth’
     • In the expression: nth SZ V0</code></pre>
 <h1 id="vchop3">vchop3</h1>
-<div class="sourceCode" id="cb34"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb34-1" title="1"><span class="co">-- | chop a vector in two parts</span></a>
-<a class="sourceLine" id="cb34-2" title="2"><span class="co">-- &gt;&gt;&gt; vchop (SS SZ) (Vcons 1 (Vcons 2 V0))</span></a>
-<a class="sourceLine" id="cb34-3" title="3"><span class="co">-- (Vcons 1 V0,Vcons 2 V0)</span></a>
-<a class="sourceLine" id="cb34-4" title="4">vchop <span class="ot">=</span> vchop3</a>
-<a class="sourceLine" id="cb34-5" title="5"><span class="ot">vchop3 ::</span> <span class="dt">SNat</span> m <span class="ot">-&gt;</span> <span class="dt">Vec</span>(m<span class="op">:+</span>n) a <span class="ot">-&gt;</span> (<span class="dt">Vec</span> m a, <span class="dt">Vec</span> n a)</a>
-<a class="sourceLine" id="cb34-6" title="6">vchop3 <span class="dt">SZ</span> xs <span class="ot">=</span> (<span class="dt">V0</span>, xs)</a>
-<a class="sourceLine" id="cb34-7" title="7">vchop3 (<span class="dt">SS</span> m) (<span class="dt">Vcons</span> x xs) <span class="ot">=</span> (<span class="dt">Vcons</span> x ys, zs) <span class="kw">where</span></a>
-<a class="sourceLine" id="cb34-8" title="8">  (ys,zs) <span class="ot">=</span> vchop3 m xs</a></code></pre></div>
+<div class="sourceCode" id="cb35"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb35-1" title="1"><span class="co">-- | chop a vector in two parts</span></a>
+<a class="sourceLine" id="cb35-2" title="2"><span class="co">-- &gt;&gt;&gt; vchop (SS SZ) (Vcons 1 (Vcons 2 V0))</span></a>
+<a class="sourceLine" id="cb35-3" title="3"><span class="co">-- (Vcons 1 V0,Vcons 2 V0)</span></a>
+<a class="sourceLine" id="cb35-4" title="4">vchop <span class="ot">=</span> vchop3</a>
+<a class="sourceLine" id="cb35-5" title="5"><span class="ot">vchop3 ::</span> <span class="dt">SNat</span> m <span class="ot">-&gt;</span> <span class="dt">Vec</span>(m<span class="op">:+</span>n) a <span class="ot">-&gt;</span> (<span class="dt">Vec</span> m a, <span class="dt">Vec</span> n a)</a>
+<a class="sourceLine" id="cb35-6" title="6">vchop3 <span class="dt">SZ</span> xs <span class="ot">=</span> (<span class="dt">V0</span>, xs)</a>
+<a class="sourceLine" id="cb35-7" title="7">vchop3 (<span class="dt">SS</span> m) (<span class="dt">Vcons</span> x xs) <span class="ot">=</span> (<span class="dt">Vcons</span> x ys, zs) <span class="kw">where</span></a>
+<a class="sourceLine" id="cb35-8" title="8">  (ys,zs) <span class="ot">=</span> vchop3 m xs</a></code></pre></div>
 <h1 id="vreplicate">vreplicate</h1>
-<div class="sourceCode" id="cb35"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb35-1" title="1"><span class="co">-- | `vreplicate n a` is a vector of n copies of a</span></a>
-<a class="sourceLine" id="cb35-2" title="2"><span class="co">-- &gt;&gt;&gt; vreplicate (SS SZ) 1</span></a>
-<a class="sourceLine" id="cb35-3" title="3"><span class="co">-- Vcons 1 V0</span></a>
-<a class="sourceLine" id="cb35-4" title="4"><span class="co">-- &gt;&gt;&gt; vreplicate (SS (SS SZ)) 1</span></a>
-<a class="sourceLine" id="cb35-5" title="5"><span class="co">-- Vcons 1 (Vcons 1 V0)</span></a>
-<a class="sourceLine" id="cb35-6" title="6"><span class="ot">vreplicate ::</span> <span class="dt">SNat</span> n <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">Vec</span> n a</a>
-<a class="sourceLine" id="cb35-7" title="7">vreplicate <span class="dt">SZ</span> _ <span class="ot">=</span> <span class="dt">V0</span></a>
-<a class="sourceLine" id="cb35-8" title="8">vreplicate (<span class="dt">SS</span> n) x <span class="ot">=</span> <span class="dt">Vcons</span> x (vreplicate n x)</a></code></pre></div>
+<div class="sourceCode" id="cb36"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb36-1" title="1"><span class="co">-- | `vreplicate n a` is a vector of n copies of a</span></a>
+<a class="sourceLine" id="cb36-2" title="2"><span class="co">-- &gt;&gt;&gt; vreplicate (SS SZ) 1</span></a>
+<a class="sourceLine" id="cb36-3" title="3"><span class="co">-- Vcons 1 V0</span></a>
+<a class="sourceLine" id="cb36-4" title="4"><span class="co">-- &gt;&gt;&gt; vreplicate (SS (SS SZ)) 1</span></a>
+<a class="sourceLine" id="cb36-5" title="5"><span class="co">-- Vcons 1 (Vcons 1 V0)</span></a>
+<a class="sourceLine" id="cb36-6" title="6"><span class="ot">vreplicate ::</span> <span class="dt">SNat</span> n <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">Vec</span> n a</a>
+<a class="sourceLine" id="cb36-7" title="7">vreplicate <span class="dt">SZ</span> _ <span class="ot">=</span> <span class="dt">V0</span></a>
+<a class="sourceLine" id="cb36-8" title="8">vreplicate (<span class="dt">SS</span> n) x <span class="ot">=</span> <span class="dt">Vcons</span> x (vreplicate n x)</a></code></pre></div>
 <p><strong>Exercise:</strong> define</p>
-<div class="sourceCode" id="cb36"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb36-1" title="1"><span class="ot">vcycle ::</span> <span class="dt">SNat</span> n <span class="ot">-&gt;</span> <span class="dt">Vec</span> m a <span class="ot">-&gt;</span> <span class="dt">Vec</span> (n<span class="op">:*</span>m) a</a></code></pre></div>
+<div class="sourceCode" id="cb37"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb37-1" title="1"><span class="ot">vcycle ::</span> <span class="dt">SNat</span> n <span class="ot">-&gt;</span> <span class="dt">Vec</span> m a <span class="ot">-&gt;</span> <span class="dt">Vec</span> (n<span class="op">:*</span>m) a</a></code></pre></div>
 <h1 id="vtake">vtake</h1>
 <p>We want to define a vector counterpart of <code>take</code></p>
-<div class="sourceCode" id="cb37"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb37-1" title="1"><span class="ot">{-# LANGUAGE AllowAmbiguousTypes #-}</span></a>
-<a class="sourceLine" id="cb37-2" title="2"></a>
-<a class="sourceLine" id="cb37-3" title="3"><span class="ot">vtake1 ::</span> <span class="dt">SNat</span> m <span class="ot">-&gt;</span> <span class="dt">Vec</span> (m <span class="op">:+</span> n) <span class="ot">-&gt;</span> <span class="dt">Vec</span> m x</a>
-<a class="sourceLine" id="cb37-4" title="4">vtake1  <span class="dt">SZ</span>     xs     <span class="ot">=</span> <span class="dt">V0</span></a>
-<a class="sourceLine" id="cb37-5" title="5">vtake1 (<span class="dt">SS</span> m) (x<span class="op">:&gt;</span>xs) <span class="ot">=</span> x <span class="op">:&gt;</span> vtake1 m xs</a></code></pre></div>
+<div class="sourceCode" id="cb38"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb38-1" title="1"><span class="ot">{-# LANGUAGE AllowAmbiguousTypes #-}</span></a>
+<a class="sourceLine" id="cb38-2" title="2"></a>
+<a class="sourceLine" id="cb38-3" title="3"><span class="ot">vtake1 ::</span> <span class="dt">SNat</span> m <span class="ot">-&gt;</span> <span class="dt">Vec</span> (m <span class="op">:+</span> n) <span class="ot">-&gt;</span> <span class="dt">Vec</span> m x</a>
+<a class="sourceLine" id="cb38-4" title="4">vtake1  <span class="dt">SZ</span>     xs     <span class="ot">=</span> <span class="dt">V0</span></a>
+<a class="sourceLine" id="cb38-5" title="5">vtake1 (<span class="dt">SS</span> m) (x<span class="op">:&gt;</span>xs) <span class="ot">=</span> x <span class="op">:&gt;</span> vtake1 m xs</a></code></pre></div>
 <pre class="error"><code>error: …
     • Could not deduce: (n1 :+ n0) ~ n2
       from the context: m ~ &#39;S n1
@@ -412,29 +419,29 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
 <pre><code>(m : Nat) -&gt; (n : Nat) -&gt; Vec (m + n) x -&gt; Vec m x</code></pre>
 <h1 id="proxy---the-handle"><code>Proxy</code> - the handle</h1>
 <p>Let us try to build a handle:</p>
-<div class="sourceCode" id="cb40"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb40-1" title="1"><span class="co">-- | Nat Proxy</span></a>
-<a class="sourceLine" id="cb40-2" title="2"><span class="kw">data</span> <span class="dt">NP</span><span class="ot"> ::</span> <span class="dt">Nat</span> <span class="ot">-&gt;</span> <span class="op">*</span> <span class="kw">where</span> <span class="dt">NP</span><span class="ot"> ::</span> <span class="dt">NP</span> n</a>
-<a class="sourceLine" id="cb40-3" title="3"></a>
-<a class="sourceLine" id="cb40-4" title="4"><span class="co">-- &gt;&gt;&gt; let v = 1 :&gt; (1 :&gt; (1 :&gt; V0)); two = SS(SS SZ) in vtake2 two NP v</span></a>
-<a class="sourceLine" id="cb40-5" title="5"><span class="co">-- 1 :&gt; (1 :&gt; V0)</span></a>
-<a class="sourceLine" id="cb40-6" title="6"><span class="ot">vtake2 ::</span> <span class="dt">SNat</span> m <span class="ot">-&gt;</span> <span class="dt">NP</span> n <span class="ot">-&gt;</span> <span class="dt">Vec</span> (m <span class="op">:+</span> n) a <span class="ot">-&gt;</span> <span class="dt">Vec</span> m a</a>
-<a class="sourceLine" id="cb40-7" title="7">vtake2 <span class="dt">SZ</span>     _ _ <span class="ot">=</span> <span class="dt">V0</span></a>
-<a class="sourceLine" id="cb40-8" title="8">vtake2 (<span class="dt">SS</span> m) n (x<span class="op">:&gt;</span>xs) <span class="ot">=</span> x <span class="op">:&gt;</span> vtake2 m n xs</a></code></pre></div>
+<div class="sourceCode" id="cb41"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb41-1" title="1"><span class="co">-- | Nat Proxy</span></a>
+<a class="sourceLine" id="cb41-2" title="2"><span class="kw">data</span> <span class="dt">NP</span><span class="ot"> ::</span> <span class="dt">Nat</span> <span class="ot">-&gt;</span> <span class="op">*</span> <span class="kw">where</span> <span class="dt">NP</span><span class="ot"> ::</span> <span class="dt">NP</span> n</a>
+<a class="sourceLine" id="cb41-3" title="3"></a>
+<a class="sourceLine" id="cb41-4" title="4"><span class="co">-- &gt;&gt;&gt; let v = 1 :&gt; (1 :&gt; (1 :&gt; V0)); two = SS(SS SZ) in vtake2 two NP v</span></a>
+<a class="sourceLine" id="cb41-5" title="5"><span class="co">-- 1 :&gt; (1 :&gt; V0)</span></a>
+<a class="sourceLine" id="cb41-6" title="6"><span class="ot">vtake2 ::</span> <span class="dt">SNat</span> m <span class="ot">-&gt;</span> <span class="dt">NP</span> n <span class="ot">-&gt;</span> <span class="dt">Vec</span> (m <span class="op">:+</span> n) a <span class="ot">-&gt;</span> <span class="dt">Vec</span> m a</a>
+<a class="sourceLine" id="cb41-7" title="7">vtake2 <span class="dt">SZ</span>     _ _ <span class="ot">=</span> <span class="dt">V0</span></a>
+<a class="sourceLine" id="cb41-8" title="8">vtake2 (<span class="dt">SS</span> m) n (x<span class="op">:&gt;</span>xs) <span class="ot">=</span> x <span class="op">:&gt;</span> vtake2 m n xs</a></code></pre></div>
 <p>Note: this is different from a singleton.</p>
 <h1 id="a-universal-handle">A universal handle</h1>
-<div class="sourceCode" id="cb41"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb41-1" title="1"><span class="co">-- | Nat Proxy</span></a>
-<a class="sourceLine" id="cb41-2" title="2"><span class="kw">data</span> <span class="dt">NP</span><span class="ot"> ::</span> <span class="dt">Nat</span> <span class="ot">-&gt;</span> <span class="op">*</span> <span class="kw">where</span> <span class="dt">NP</span><span class="ot"> ::</span> <span class="dt">NP</span> n</a></code></pre></div>
+<div class="sourceCode" id="cb42"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb42-1" title="1"><span class="co">-- | Nat Proxy</span></a>
+<a class="sourceLine" id="cb42-2" title="2"><span class="kw">data</span> <span class="dt">NP</span><span class="ot"> ::</span> <span class="dt">Nat</span> <span class="ot">-&gt;</span> <span class="op">*</span> <span class="kw">where</span> <span class="dt">NP</span><span class="ot"> ::</span> <span class="dt">NP</span> n</a></code></pre></div>
 <p>there is no reason why our handle should depend on <code>Nat</code>, so why not make it polymorphic?</p>
-<div class="sourceCode" id="cb42"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb42-1" title="1"><span class="ot">{-# LANGUAGE PolyKinds #-}</span></a>
-<a class="sourceLine" id="cb42-2" title="2"><span class="co">-- | Generic Proxy</span></a>
-<a class="sourceLine" id="cb42-3" title="3"><span class="kw">data</span> <span class="dt">Proxy</span><span class="ot"> ::</span> k <span class="ot">-&gt;</span> <span class="op">*</span> <span class="kw">where</span></a>
-<a class="sourceLine" id="cb42-4" title="4">  <span class="dt">Proxy</span><span class="ot"> ::</span> <span class="dt">Proxy</span> (<span class="ot">i::</span>k)</a>
-<a class="sourceLine" id="cb42-5" title="5"></a>
-<a class="sourceLine" id="cb42-6" title="6"><span class="co">-- &gt;&gt;&gt; let v = 1 :&gt; (1 :&gt; (1 :&gt; V0)); two = SS(SS SZ) in vtake3 two Proxy v</span></a>
-<a class="sourceLine" id="cb42-7" title="7"><span class="co">-- 1 :&gt; (1 :&gt; V0)</span></a>
-<a class="sourceLine" id="cb42-8" title="8"><span class="ot">vtake3 ::</span> <span class="dt">SNat</span> m <span class="ot">-&gt;</span> <span class="dt">Proxy</span> n <span class="ot">-&gt;</span> <span class="dt">Vec</span> (m <span class="op">:+</span> n) a <span class="ot">-&gt;</span> <span class="dt">Vec</span> m a</a>
-<a class="sourceLine" id="cb42-9" title="9">vtake3 <span class="dt">SZ</span>     _ _ <span class="ot">=</span> <span class="dt">V0</span></a>
-<a class="sourceLine" id="cb42-10" title="10">vtake3 (<span class="dt">SS</span> m) n (x<span class="op">:&gt;</span>xs) <span class="ot">=</span> x <span class="op">:&gt;</span> vtake3 m n xs</a></code></pre></div>
+<div class="sourceCode" id="cb43"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb43-1" title="1"><span class="ot">{-# LANGUAGE PolyKinds #-}</span></a>
+<a class="sourceLine" id="cb43-2" title="2"><span class="co">-- | Generic Proxy</span></a>
+<a class="sourceLine" id="cb43-3" title="3"><span class="kw">data</span> <span class="dt">Proxy</span><span class="ot"> ::</span> k <span class="ot">-&gt;</span> <span class="op">*</span> <span class="kw">where</span></a>
+<a class="sourceLine" id="cb43-4" title="4">  <span class="dt">Proxy</span><span class="ot"> ::</span> <span class="dt">Proxy</span> (<span class="ot">i::</span>k)</a>
+<a class="sourceLine" id="cb43-5" title="5"></a>
+<a class="sourceLine" id="cb43-6" title="6"><span class="co">-- &gt;&gt;&gt; let v = 1 :&gt; (1 :&gt; (1 :&gt; V0)); two = SS(SS SZ) in vtake3 two Proxy v</span></a>
+<a class="sourceLine" id="cb43-7" title="7"><span class="co">-- 1 :&gt; (1 :&gt; V0)</span></a>
+<a class="sourceLine" id="cb43-8" title="8"><span class="ot">vtake3 ::</span> <span class="dt">SNat</span> m <span class="ot">-&gt;</span> <span class="dt">Proxy</span> n <span class="ot">-&gt;</span> <span class="dt">Vec</span> (m <span class="op">:+</span> n) a <span class="ot">-&gt;</span> <span class="dt">Vec</span> m a</a>
+<a class="sourceLine" id="cb43-9" title="9">vtake3 <span class="dt">SZ</span>     _ _ <span class="ot">=</span> <span class="dt">V0</span></a>
+<a class="sourceLine" id="cb43-10" title="10">vtake3 (<span class="dt">SS</span> m) n (x<span class="op">:&gt;</span>xs) <span class="ot">=</span> x <span class="op">:&gt;</span> vtake3 m n xs</a></code></pre></div>
 <p><strong>Uwaga:</strong> <code>k</code> is a kind variable, hence the need for <code>PolyKinds</code></p>
 <h1 id="back-to-the-future-or-another-take-on-vtake1">Back to the future or another take on vtake1</h1>
 <p>Since 8.0 GHC allows explicit type applications, e.g.</p>
@@ -445,149 +452,149 @@ Prelude&gt; read @Int &quot;42&quot;
 42
 Prelude&gt; read @Double &quot;42&quot;
 42.0</code></pre>
-<div class="sourceCode" id="cb44"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb44-1" title="1"><span class="co">-- vtake4 requires:</span></a>
-<a class="sourceLine" id="cb44-2" title="2"><span class="co">-- {-# LANGUAGE ScopedTypeVariables #-}</span></a>
-<a class="sourceLine" id="cb44-3" title="3"><span class="co">-- {-# LANGUAGE TypeApplications #-} -- GHC&gt;=8.0</span></a>
-<a class="sourceLine" id="cb44-4" title="4"></a>
-<a class="sourceLine" id="cb44-5" title="5"><span class="co">-- &gt;&gt;&gt; let v = 1 :&gt; (1 :&gt; (1 :&gt; V0)); two = SS(SS SZ) in vtake4 two v</span></a>
-<a class="sourceLine" id="cb44-6" title="6"><span class="co">-- 1 :&gt; (1 :&gt; V0)</span></a>
-<a class="sourceLine" id="cb44-7" title="7"><span class="ot">vtake4 ::</span> <span class="kw">forall</span> n m a<span class="op">.</span> <span class="dt">SNat</span> m <span class="ot">-&gt;</span> <span class="dt">Vec</span> (m <span class="op">:+</span> n) a <span class="ot">-&gt;</span> <span class="dt">Vec</span> m a</a>
-<a class="sourceLine" id="cb44-8" title="8">vtake4 <span class="dt">SZ</span> _ <span class="ot">=</span> <span class="dt">V0</span></a>
-<a class="sourceLine" id="cb44-9" title="9">vtake4 (<span class="dt">SS</span> m) (x<span class="op">:&gt;</span>xs) <span class="ot">=</span> x <span class="op">:&gt;</span> vtake4 <span class="op">@</span>n m xs</a></code></pre></div>
-<h1 id="type-equality-and-proofs">Type Equality and proofs</h1>
-<div class="sourceCode" id="cb45"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb45-1" title="1"><span class="co">-- cf Data.Type.Equality</span></a>
-<a class="sourceLine" id="cb45-2" title="2"></a>
-<a class="sourceLine" id="cb45-3" title="3">infix <span class="dv">4</span> <span class="op">:~:</span></a>
+<div class="sourceCode" id="cb45"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb45-1" title="1"><span class="co">-- vtake4 requires:</span></a>
+<a class="sourceLine" id="cb45-2" title="2"><span class="co">-- {-# LANGUAGE ScopedTypeVariables #-}</span></a>
+<a class="sourceLine" id="cb45-3" title="3"><span class="co">-- {-# LANGUAGE TypeApplications #-} -- GHC&gt;=8.0</span></a>
 <a class="sourceLine" id="cb45-4" title="4"></a>
-<a class="sourceLine" id="cb45-5" title="5"><span class="kw">data</span> a <span class="op">:~:</span> b <span class="kw">where</span></a>
-<a class="sourceLine" id="cb45-6" title="6">  <span class="dt">Refl</span><span class="ot"> ::</span>  a <span class="op">:~:</span> a</a>
-<a class="sourceLine" id="cb45-7" title="7"><span class="co">-- data a :~: b = (a ~ b) =&gt; Refl</span></a>
-<a class="sourceLine" id="cb45-8" title="8"></a>
-<a class="sourceLine" id="cb45-9" title="9"><span class="ot">sym ::</span> (a <span class="op">:~:</span> b) <span class="ot">-&gt;</span> (b <span class="op">:~:</span> a)</a>
-<a class="sourceLine" id="cb45-10" title="10">sym <span class="dt">Refl</span> <span class="ot">=</span> <span class="dt">Refl</span>  <span class="co">-- seems trivial, but see if you can simplify it...</span></a>
-<a class="sourceLine" id="cb45-11" title="11"></a>
-<a class="sourceLine" id="cb45-12" title="12"><span class="ot">trans ::</span> (a <span class="op">:~:</span> b) <span class="ot">-&gt;</span> (b <span class="op">:~:</span> c) <span class="ot">-&gt;</span> (a <span class="op">:~:</span> c)</a>
-<a class="sourceLine" id="cb45-13" title="13">trans <span class="dt">Refl</span> <span class="dt">Refl</span> <span class="ot">=</span> <span class="dt">Refl</span></a>
-<a class="sourceLine" id="cb45-14" title="14"></a>
-<a class="sourceLine" id="cb45-15" title="15"><span class="ot">cong ::</span> <span class="kw">forall</span> f a b<span class="op">.</span>a <span class="op">:~:</span> b <span class="ot">-&gt;</span> f a <span class="op">:~:</span> f b</a>
-<a class="sourceLine" id="cb45-16" title="16">cong <span class="dt">Refl</span> <span class="ot">=</span> <span class="dt">Refl</span></a>
-<a class="sourceLine" id="cb45-17" title="17"></a>
-<a class="sourceLine" id="cb45-18" title="18"><span class="co">-- (a ~ b) implies (f a) implies (f b)</span></a>
-<a class="sourceLine" id="cb45-19" title="19"><span class="ot">subst ::</span> a <span class="op">:~:</span> b <span class="ot">-&gt;</span> f a <span class="ot">-&gt;</span> f b</a>
-<a class="sourceLine" id="cb45-20" title="20">subst <span class="dt">Refl</span> <span class="ot">=</span> <span class="fu">id</span></a></code></pre></div>
-<h1 id="some-proofs">Some proofs</h1>
-<div class="sourceCode" id="cb46"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb46-1" title="1"><span class="co">-- Trivial lemma: 0+n ~ n; explicit quantification</span></a>
-<a class="sourceLine" id="cb46-2" title="2"><span class="ot">plus_id_l ::</span> <span class="dt">SNat</span> n <span class="ot">-&gt;</span> <span class="dt">Z</span> <span class="op">:+</span> n <span class="op">:~:</span> n</a>
-<a class="sourceLine" id="cb46-3" title="3">plus_id_l _ <span class="ot">=</span> <span class="dt">Refl</span></a>
+<a class="sourceLine" id="cb45-5" title="5"><span class="co">-- &gt;&gt;&gt; let v = 1 :&gt; (1 :&gt; (1 :&gt; V0)); two = SS(SS SZ) in vtake4 two v</span></a>
+<a class="sourceLine" id="cb45-6" title="6"><span class="co">-- 1 :&gt; (1 :&gt; V0)</span></a>
+<a class="sourceLine" id="cb45-7" title="7"><span class="ot">vtake4 ::</span> <span class="kw">forall</span> n m a<span class="op">.</span> <span class="dt">SNat</span> m <span class="ot">-&gt;</span> <span class="dt">Vec</span> (m <span class="op">:+</span> n) a <span class="ot">-&gt;</span> <span class="dt">Vec</span> m a</a>
+<a class="sourceLine" id="cb45-8" title="8">vtake4 <span class="dt">SZ</span> _ <span class="ot">=</span> <span class="dt">V0</span></a>
+<a class="sourceLine" id="cb45-9" title="9">vtake4 (<span class="dt">SS</span> m) (x<span class="op">:&gt;</span>xs) <span class="ot">=</span> x <span class="op">:&gt;</span> vtake4 <span class="op">@</span>n m xs</a></code></pre></div>
+<h1 id="type-equality-and-proofs">Type Equality and proofs</h1>
+<div class="sourceCode" id="cb46"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb46-1" title="1"><span class="co">-- cf Data.Type.Equality</span></a>
+<a class="sourceLine" id="cb46-2" title="2"></a>
+<a class="sourceLine" id="cb46-3" title="3">infix <span class="dv">4</span> <span class="op">:~:</span></a>
 <a class="sourceLine" id="cb46-4" title="4"></a>
-<a class="sourceLine" id="cb46-5" title="5"><span class="co">-- implicit quantification</span></a>
-<a class="sourceLine" id="cb46-6" title="6"><span class="ot">plus_id_l_impl ::</span> n <span class="op">:~:</span> <span class="dt">Z</span> <span class="op">:+</span> n</a>
-<a class="sourceLine" id="cb46-7" title="7">plus_id_l_impl <span class="ot">=</span> <span class="dt">Refl</span></a>
+<a class="sourceLine" id="cb46-5" title="5"><span class="kw">data</span> a <span class="op">:~:</span> b <span class="kw">where</span></a>
+<a class="sourceLine" id="cb46-6" title="6">  <span class="dt">Refl</span><span class="ot"> ::</span>  a <span class="op">:~:</span> a</a>
+<a class="sourceLine" id="cb46-7" title="7"><span class="co">-- data a :~: b = (a ~ b) =&gt; Refl</span></a>
 <a class="sourceLine" id="cb46-8" title="8"></a>
-<a class="sourceLine" id="cb46-9" title="9"><span class="co">-- Prove by induction: n+0 ~ n</span></a>
-<a class="sourceLine" id="cb46-10" title="10"><span class="co">-- Pattern-match on n, so explicit quantification</span></a>
-<a class="sourceLine" id="cb46-11" title="11"><span class="co">-- Compare with Coq Agda or Idris</span></a>
-<a class="sourceLine" id="cb46-12" title="12"><span class="ot">plus_id_r ::</span> <span class="dt">SNat</span> n <span class="ot">-&gt;</span> n <span class="op">:+</span> <span class="dt">Z</span> <span class="op">:~:</span> n</a>
-<a class="sourceLine" id="cb46-13" title="13">plus_id_r <span class="dt">SZ</span> <span class="ot">=</span> <span class="dt">Refl</span></a>
-<a class="sourceLine" id="cb46-14" title="14">plus_id_r (<span class="dt">SS</span> m) <span class="ot">=</span> cong <span class="op">@</span><span class="dt">S</span> (plus_id_r m)</a>
-<a class="sourceLine" id="cb46-15" title="15"><span class="co">-- @S is optional above, added only for clarity</span></a></code></pre></div>
+<a class="sourceLine" id="cb46-9" title="9"><span class="ot">sym ::</span> (a <span class="op">:~:</span> b) <span class="ot">-&gt;</span> (b <span class="op">:~:</span> a)</a>
+<a class="sourceLine" id="cb46-10" title="10">sym <span class="dt">Refl</span> <span class="ot">=</span> <span class="dt">Refl</span>  <span class="co">-- seems trivial, but see if you can simplify it...</span></a>
+<a class="sourceLine" id="cb46-11" title="11"></a>
+<a class="sourceLine" id="cb46-12" title="12"><span class="ot">trans ::</span> (a <span class="op">:~:</span> b) <span class="ot">-&gt;</span> (b <span class="op">:~:</span> c) <span class="ot">-&gt;</span> (a <span class="op">:~:</span> c)</a>
+<a class="sourceLine" id="cb46-13" title="13">trans <span class="dt">Refl</span> <span class="dt">Refl</span> <span class="ot">=</span> <span class="dt">Refl</span></a>
+<a class="sourceLine" id="cb46-14" title="14"></a>
+<a class="sourceLine" id="cb46-15" title="15"><span class="ot">cong ::</span> <span class="kw">forall</span> f a b<span class="op">.</span>a <span class="op">:~:</span> b <span class="ot">-&gt;</span> f a <span class="op">:~:</span> f b</a>
+<a class="sourceLine" id="cb46-16" title="16">cong <span class="dt">Refl</span> <span class="ot">=</span> <span class="dt">Refl</span></a>
+<a class="sourceLine" id="cb46-17" title="17"></a>
+<a class="sourceLine" id="cb46-18" title="18"><span class="co">-- (a ~ b) implies (f a) implies (f b)</span></a>
+<a class="sourceLine" id="cb46-19" title="19"><span class="ot">subst ::</span> a <span class="op">:~:</span> b <span class="ot">-&gt;</span> f a <span class="ot">-&gt;</span> f b</a>
+<a class="sourceLine" id="cb46-20" title="20">subst <span class="dt">Refl</span> <span class="ot">=</span> <span class="fu">id</span></a></code></pre></div>
+<h1 id="some-proofs">Some proofs</h1>
+<div class="sourceCode" id="cb47"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb47-1" title="1"><span class="co">-- Trivial lemma: 0+n ~ n; explicit quantification</span></a>
+<a class="sourceLine" id="cb47-2" title="2"><span class="ot">plus_id_l ::</span> <span class="dt">SNat</span> n <span class="ot">-&gt;</span> <span class="dt">Z</span> <span class="op">:+</span> n <span class="op">:~:</span> n</a>
+<a class="sourceLine" id="cb47-3" title="3">plus_id_l _ <span class="ot">=</span> <span class="dt">Refl</span></a>
+<a class="sourceLine" id="cb47-4" title="4"></a>
+<a class="sourceLine" id="cb47-5" title="5"><span class="co">-- implicit quantification</span></a>
+<a class="sourceLine" id="cb47-6" title="6"><span class="ot">plus_id_l_impl ::</span> n <span class="op">:~:</span> <span class="dt">Z</span> <span class="op">:+</span> n</a>
+<a class="sourceLine" id="cb47-7" title="7">plus_id_l_impl <span class="ot">=</span> <span class="dt">Refl</span></a>
+<a class="sourceLine" id="cb47-8" title="8"></a>
+<a class="sourceLine" id="cb47-9" title="9"><span class="co">-- Prove by induction: n+0 ~ n</span></a>
+<a class="sourceLine" id="cb47-10" title="10"><span class="co">-- Pattern-match on n, so explicit quantification</span></a>
+<a class="sourceLine" id="cb47-11" title="11"><span class="co">-- Compare with Coq Agda or Idris</span></a>
+<a class="sourceLine" id="cb47-12" title="12"><span class="ot">plus_id_r ::</span> <span class="dt">SNat</span> n <span class="ot">-&gt;</span> n <span class="op">:+</span> <span class="dt">Z</span> <span class="op">:~:</span> n</a>
+<a class="sourceLine" id="cb47-13" title="13">plus_id_r <span class="dt">SZ</span> <span class="ot">=</span> <span class="dt">Refl</span></a>
+<a class="sourceLine" id="cb47-14" title="14">plus_id_r (<span class="dt">SS</span> m) <span class="ot">=</span> cong <span class="op">@</span><span class="dt">S</span> (plus_id_r m)</a>
+<a class="sourceLine" id="cb47-15" title="15"><span class="co">-- @S is optional above, added only for clarity</span></a></code></pre></div>
 <h1 id="provably-safe-casts">Provably safe casts</h1>
-<div class="sourceCode" id="cb47"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb47-1" title="1"><span class="co">-- | Typesafe cast using propositional equality</span></a>
-<a class="sourceLine" id="cb47-2" title="2"><span class="co">-- simple but not very useful (subst is more powerful)</span></a>
-<a class="sourceLine" id="cb47-3" title="3"><span class="ot">castWith ::</span> (a <span class="op">:~:</span> b) <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> b</a>
-<a class="sourceLine" id="cb47-4" title="4">castWith <span class="dt">Refl</span> x <span class="ot">=</span> x</a>
-<a class="sourceLine" id="cb47-5" title="5"></a>
-<a class="sourceLine" id="cb47-6" title="6"><span class="co">-- | Generalised form of typesafe cast</span></a>
-<a class="sourceLine" id="cb47-7" title="7"><span class="ot">gcastWith ::</span> (a <span class="op">:~:</span> b) <span class="ot">-&gt;</span> (a <span class="op">~</span> b <span class="ot">=&gt;</span> r) <span class="ot">-&gt;</span> r</a>
-<a class="sourceLine" id="cb47-8" title="8">gcastWith <span class="dt">Refl</span> x <span class="ot">=</span> x</a>
-<a class="sourceLine" id="cb47-9" title="9"></a>
-<a class="sourceLine" id="cb47-10" title="10"><span class="ot">simpl0r ::</span> <span class="dt">SNat</span> n <span class="ot">-&gt;</span> f (n<span class="op">:+</span><span class="dt">Z</span>) <span class="ot">-&gt;</span> f n</a>
-<a class="sourceLine" id="cb47-11" title="11"><span class="co">-- Special case: Vec (n:+Z) a -&gt; Vec n a</span></a>
-<a class="sourceLine" id="cb47-12" title="12">simpl0r n v <span class="ot">=</span> castWith (cong (plus_id_r n)) v</a>
-<a class="sourceLine" id="cb47-13" title="13"><span class="co">-- simpl0r n v = subst (plus_id_r n) v</span></a>
-<a class="sourceLine" id="cb47-14" title="14"></a>
-<a class="sourceLine" id="cb47-15" title="15"><span class="ot">expand0r ::</span> <span class="dt">SNat</span> n <span class="ot">-&gt;</span> f n <span class="ot">-&gt;</span> f(n<span class="op">:+</span><span class="dt">Z</span>)</a>
-<a class="sourceLine" id="cb47-16" title="16">expand0r n x <span class="ot">=</span> subst (sym (plus_id_r n)) x</a>
-<a class="sourceLine" id="cb47-17" title="17"></a>
-<a class="sourceLine" id="cb47-18" title="18"><span class="co">-- Instead of `subst ... sym` we can put the constraint solver to work</span></a>
-<a class="sourceLine" id="cb47-19" title="19"><span class="co">-- you can think of it as a kind of tactic</span></a>
-<a class="sourceLine" id="cb47-20" title="20"><span class="ot">expand0r&#39; ::</span> <span class="dt">SNat</span> n <span class="ot">-&gt;</span> f n <span class="ot">-&gt;</span> f(n<span class="op">:+</span><span class="dt">Z</span>)</a>
-<a class="sourceLine" id="cb47-21" title="21">expand0r&#39; n x <span class="ot">=</span> gcastWith (plus_id_r n) x</a></code></pre></div>
+<div class="sourceCode" id="cb48"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb48-1" title="1"><span class="co">-- | Typesafe cast using propositional equality</span></a>
+<a class="sourceLine" id="cb48-2" title="2"><span class="co">-- simple but not very useful (subst is more powerful)</span></a>
+<a class="sourceLine" id="cb48-3" title="3"><span class="ot">castWith ::</span> (a <span class="op">:~:</span> b) <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> b</a>
+<a class="sourceLine" id="cb48-4" title="4">castWith <span class="dt">Refl</span> x <span class="ot">=</span> x</a>
+<a class="sourceLine" id="cb48-5" title="5"></a>
+<a class="sourceLine" id="cb48-6" title="6"><span class="co">-- | Generalised form of typesafe cast</span></a>
+<a class="sourceLine" id="cb48-7" title="7"><span class="ot">gcastWith ::</span> (a <span class="op">:~:</span> b) <span class="ot">-&gt;</span> (a <span class="op">~</span> b <span class="ot">=&gt;</span> r) <span class="ot">-&gt;</span> r</a>
+<a class="sourceLine" id="cb48-8" title="8">gcastWith <span class="dt">Refl</span> x <span class="ot">=</span> x</a>
+<a class="sourceLine" id="cb48-9" title="9"></a>
+<a class="sourceLine" id="cb48-10" title="10"><span class="ot">simpl0r ::</span> <span class="dt">SNat</span> n <span class="ot">-&gt;</span> f (n<span class="op">:+</span><span class="dt">Z</span>) <span class="ot">-&gt;</span> f n</a>
+<a class="sourceLine" id="cb48-11" title="11"><span class="co">-- Special case: Vec (n:+Z) a -&gt; Vec n a</span></a>
+<a class="sourceLine" id="cb48-12" title="12">simpl0r n v <span class="ot">=</span> castWith (cong (plus_id_r n)) v</a>
+<a class="sourceLine" id="cb48-13" title="13"><span class="co">-- simpl0r n v = subst (plus_id_r n) v</span></a>
+<a class="sourceLine" id="cb48-14" title="14"></a>
+<a class="sourceLine" id="cb48-15" title="15"><span class="ot">expand0r ::</span> <span class="dt">SNat</span> n <span class="ot">-&gt;</span> f n <span class="ot">-&gt;</span> f(n<span class="op">:+</span><span class="dt">Z</span>)</a>
+<a class="sourceLine" id="cb48-16" title="16">expand0r n x <span class="ot">=</span> subst (sym (plus_id_r n)) x</a>
+<a class="sourceLine" id="cb48-17" title="17"></a>
+<a class="sourceLine" id="cb48-18" title="18"><span class="co">-- Instead of `subst ... sym` we can put the constraint solver to work</span></a>
+<a class="sourceLine" id="cb48-19" title="19"><span class="co">-- you can think of it as a kind of tactic</span></a>
+<a class="sourceLine" id="cb48-20" title="20"><span class="ot">expand0r&#39; ::</span> <span class="dt">SNat</span> n <span class="ot">-&gt;</span> f n <span class="ot">-&gt;</span> f(n<span class="op">:+</span><span class="dt">Z</span>)</a>
+<a class="sourceLine" id="cb48-21" title="21">expand0r&#39; n x <span class="ot">=</span> gcastWith (plus_id_r n) x</a></code></pre></div>
 <h1 id="one-more-lemma">One more lemma</h1>
-<div class="sourceCode" id="cb48"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb48-1" title="1"><span class="co">-- n + S m ~ S(m+n)</span></a>
-<a class="sourceLine" id="cb48-2" title="2"><span class="co">-- implicit m, explicit n</span></a>
-<a class="sourceLine" id="cb48-3" title="3"><span class="ot">plus_succ_r ::</span> <span class="kw">forall</span> m n<span class="op">.</span> <span class="dt">SNat</span> n <span class="ot">-&gt;</span> n <span class="op">:+</span> <span class="dt">S</span> m <span class="op">:~:</span> <span class="dt">S</span>(n <span class="op">:+</span> m)</a>
-<a class="sourceLine" id="cb48-4" title="4">plus_succ_r <span class="dt">SZ</span> <span class="ot">=</span> <span class="dt">Refl</span></a>
-<a class="sourceLine" id="cb48-5" title="5">plus_succ_r (<span class="dt">SS</span> n1) <span class="ot">=</span> cong <span class="op">@</span><span class="dt">S</span> (plus_succ_r <span class="op">@</span>m n1)</a>
-<a class="sourceLine" id="cb48-6" title="6"></a>
-<a class="sourceLine" id="cb48-7" title="7"><span class="co">-- explicit m, n</span></a>
-<a class="sourceLine" id="cb48-8" title="8"><span class="ot">plus_succ_r2 ::</span> <span class="dt">SNat</span> n <span class="ot">-&gt;</span> <span class="dt">SNat</span> m <span class="ot">-&gt;</span> n <span class="op">:+</span> <span class="dt">S</span> m <span class="op">:~:</span> <span class="dt">S</span>(n <span class="op">:+</span> m)</a>
-<a class="sourceLine" id="cb48-9" title="9">plus_succ_r2 <span class="dt">SZ</span> m <span class="ot">=</span> <span class="dt">Refl</span></a>
-<a class="sourceLine" id="cb48-10" title="10">plus_succ_r2 (<span class="dt">SS</span> n1) m <span class="ot">=</span> cong <span class="op">@</span><span class="dt">S</span> (plus_succ_r2 n1 m)</a></code></pre></div>
-<h1 id="type-safe-reverse">Type-safe reverse</h1>
-<div class="sourceCode" id="cb49"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb49-1" title="1"><span class="ot">rev ::</span> [a] <span class="ot">-&gt;</span> [a]</a>
-<a class="sourceLine" id="cb49-2" title="2">rev [] <span class="ot">=</span> []</a>
-<a class="sourceLine" id="cb49-3" title="3">rev xs <span class="ot">=</span> go [] xs <span class="kw">where</span></a>
-<a class="sourceLine" id="cb49-4" title="4">  go acc [] <span class="ot">=</span> acc</a>
-<a class="sourceLine" id="cb49-5" title="5">  go acc (h<span class="op">:</span>t) <span class="ot">=</span> go (h<span class="op">:</span>acc) t</a>
+<div class="sourceCode" id="cb49"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb49-1" title="1"><span class="co">-- n + S m ~ S(m+n)</span></a>
+<a class="sourceLine" id="cb49-2" title="2"><span class="co">-- implicit m, explicit n</span></a>
+<a class="sourceLine" id="cb49-3" title="3"><span class="ot">plus_succ_r ::</span> <span class="kw">forall</span> m n<span class="op">.</span> <span class="dt">SNat</span> n <span class="ot">-&gt;</span> n <span class="op">:+</span> <span class="dt">S</span> m <span class="op">:~:</span> <span class="dt">S</span>(n <span class="op">:+</span> m)</a>
+<a class="sourceLine" id="cb49-4" title="4">plus_succ_r <span class="dt">SZ</span> <span class="ot">=</span> <span class="dt">Refl</span></a>
+<a class="sourceLine" id="cb49-5" title="5">plus_succ_r (<span class="dt">SS</span> n1) <span class="ot">=</span> cong <span class="op">@</span><span class="dt">S</span> (plus_succ_r <span class="op">@</span>m n1)</a>
 <a class="sourceLine" id="cb49-6" title="6"></a>
-<a class="sourceLine" id="cb49-7" title="7"><span class="ot">accrev ::</span> <span class="dt">Vec</span> a n <span class="ot">-&gt;</span> <span class="dt">Vec</span> a n</a>
-<a class="sourceLine" id="cb49-8" title="8">accrev <span class="dt">V0</span> <span class="ot">=</span> <span class="dt">V0</span></a>
-<a class="sourceLine" id="cb49-9" title="9">accrev xs <span class="ot">=</span> go <span class="dt">SZ</span> <span class="dt">V0</span> xs <span class="kw">where</span></a>
-<a class="sourceLine" id="cb49-10" title="10"><span class="ot">  go ::</span> <span class="kw">forall</span> m n a<span class="op">.</span><span class="dt">SNat</span> n <span class="ot">-&gt;</span> <span class="dt">Vec</span> a n <span class="ot">-&gt;</span> <span class="dt">Vec</span> a m <span class="ot">-&gt;</span> <span class="dt">Vec</span> a (n<span class="op">:+</span>m)</a>
-<a class="sourceLine" id="cb49-11" title="11">  go alen acc <span class="dt">V0</span> <span class="ot">=</span> expand0r alen acc</a>
-<a class="sourceLine" id="cb49-12" title="12">  go alen acc (h<span class="op">:&gt;</span>t) <span class="ot">=</span> gcastWith (plus_succ_r2 alen (size t))</a>
-<a class="sourceLine" id="cb49-13" title="13">                     <span class="op">$</span> go (<span class="dt">SS</span> alen) (h<span class="op">:&gt;</span>acc) t</a>
-<a class="sourceLine" id="cb49-14" title="14"></a>
-<a class="sourceLine" id="cb49-15" title="15">main <span class="ot">=</span> <span class="fu">print</span> <span class="op">$</span> accrev <span class="op">$</span> <span class="dv">1</span> <span class="op">:&gt;</span> <span class="dv">2</span> <span class="op">:&gt;</span> <span class="dv">3</span> <span class="op">:&gt;</span> <span class="dt">V0</span></a>
-<a class="sourceLine" id="cb49-16" title="16"></a>
-<a class="sourceLine" id="cb49-17" title="17"><span class="ot">size ::</span> <span class="dt">Vec</span> a n <span class="ot">-&gt;</span> <span class="dt">SNat</span> n</a>
-<a class="sourceLine" id="cb49-18" title="18">size <span class="dt">V0</span> <span class="ot">=</span> <span class="dt">SZ</span></a>
-<a class="sourceLine" id="cb49-19" title="19">size (_<span class="op">:&gt;</span>t) <span class="ot">=</span> <span class="dt">SS</span> (size t)</a></code></pre></div>
+<a class="sourceLine" id="cb49-7" title="7"><span class="co">-- explicit m, n</span></a>
+<a class="sourceLine" id="cb49-8" title="8"><span class="ot">plus_succ_r2 ::</span> <span class="dt">SNat</span> n <span class="ot">-&gt;</span> <span class="dt">SNat</span> m <span class="ot">-&gt;</span> n <span class="op">:+</span> <span class="dt">S</span> m <span class="op">:~:</span> <span class="dt">S</span>(n <span class="op">:+</span> m)</a>
+<a class="sourceLine" id="cb49-9" title="9">plus_succ_r2 <span class="dt">SZ</span> m <span class="ot">=</span> <span class="dt">Refl</span></a>
+<a class="sourceLine" id="cb49-10" title="10">plus_succ_r2 (<span class="dt">SS</span> n1) m <span class="ot">=</span> cong <span class="op">@</span><span class="dt">S</span> (plus_succ_r2 n1 m)</a></code></pre></div>
+<h1 id="type-safe-reverse">Type-safe reverse</h1>
+<div class="sourceCode" id="cb50"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb50-1" title="1"><span class="ot">rev ::</span> [a] <span class="ot">-&gt;</span> [a]</a>
+<a class="sourceLine" id="cb50-2" title="2">rev [] <span class="ot">=</span> []</a>
+<a class="sourceLine" id="cb50-3" title="3">rev xs <span class="ot">=</span> go [] xs <span class="kw">where</span></a>
+<a class="sourceLine" id="cb50-4" title="4">  go acc [] <span class="ot">=</span> acc</a>
+<a class="sourceLine" id="cb50-5" title="5">  go acc (h<span class="op">:</span>t) <span class="ot">=</span> go (h<span class="op">:</span>acc) t</a>
+<a class="sourceLine" id="cb50-6" title="6"></a>
+<a class="sourceLine" id="cb50-7" title="7"><span class="ot">accrev ::</span> <span class="dt">Vec</span> a n <span class="ot">-&gt;</span> <span class="dt">Vec</span> a n</a>
+<a class="sourceLine" id="cb50-8" title="8">accrev <span class="dt">V0</span> <span class="ot">=</span> <span class="dt">V0</span></a>
+<a class="sourceLine" id="cb50-9" title="9">accrev xs <span class="ot">=</span> go <span class="dt">SZ</span> <span class="dt">V0</span> xs <span class="kw">where</span></a>
+<a class="sourceLine" id="cb50-10" title="10"><span class="ot">  go ::</span> <span class="kw">forall</span> m n a<span class="op">.</span><span class="dt">SNat</span> n <span class="ot">-&gt;</span> <span class="dt">Vec</span> a n <span class="ot">-&gt;</span> <span class="dt">Vec</span> a m <span class="ot">-&gt;</span> <span class="dt">Vec</span> a (n<span class="op">:+</span>m)</a>
+<a class="sourceLine" id="cb50-11" title="11">  go alen acc <span class="dt">V0</span> <span class="ot">=</span> expand0r alen acc</a>
+<a class="sourceLine" id="cb50-12" title="12">  go alen acc (h<span class="op">:&gt;</span>t) <span class="ot">=</span> gcastWith (plus_succ_r2 alen (size t))</a>
+<a class="sourceLine" id="cb50-13" title="13">                     <span class="op">$</span> go (<span class="dt">SS</span> alen) (h<span class="op">:&gt;</span>acc) t</a>
+<a class="sourceLine" id="cb50-14" title="14"></a>
+<a class="sourceLine" id="cb50-15" title="15">main <span class="ot">=</span> <span class="fu">print</span> <span class="op">$</span> accrev <span class="op">$</span> <span class="dv">1</span> <span class="op">:&gt;</span> <span class="dv">2</span> <span class="op">:&gt;</span> <span class="dv">3</span> <span class="op">:&gt;</span> <span class="dt">V0</span></a>
+<a class="sourceLine" id="cb50-16" title="16"></a>
+<a class="sourceLine" id="cb50-17" title="17"><span class="ot">size ::</span> <span class="dt">Vec</span> a n <span class="ot">-&gt;</span> <span class="dt">SNat</span> n</a>
+<a class="sourceLine" id="cb50-18" title="18">size <span class="dt">V0</span> <span class="ot">=</span> <span class="dt">SZ</span></a>
+<a class="sourceLine" id="cb50-19" title="19">size (_<span class="op">:&gt;</span>t) <span class="ot">=</span> <span class="dt">SS</span> (size t)</a></code></pre></div>
 <h1 id="exercises">Exercises</h1>
 <p>Exercise: implement a vector variant of</p>
-<div class="sourceCode" id="cb50"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb50-1" title="1"><span class="ot">naiverev ::</span> [a] <span class="ot">-&gt;</span> [a]</a>
-<a class="sourceLine" id="cb50-2" title="2">naiverev [] <span class="ot">=</span> []</a>
-<a class="sourceLine" id="cb50-3" title="3">naiverev (x<span class="op">:</span>xs) <span class="ot">=</span> naiverev xs <span class="op">++</span> [x]</a></code></pre></div>
+<div class="sourceCode" id="cb51"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb51-1" title="1"><span class="ot">naiverev ::</span> [a] <span class="ot">-&gt;</span> [a]</a>
+<a class="sourceLine" id="cb51-2" title="2">naiverev [] <span class="ot">=</span> []</a>
+<a class="sourceLine" id="cb51-3" title="3">naiverev (x<span class="op">:</span>xs) <span class="ot">=</span> naiverev xs <span class="op">++</span> [x]</a></code></pre></div>
 <p>Challenge: try to eliminate <code>size</code> from <code>accrev</code> by using proxies or type app (there is <code>Data.Vect</code>, stackoverflow and blogs but try to roll your own before you peek at other solutions).</p>
 <h1 id="type-level-literals">Type level literals</h1>
-<div class="sourceCode" id="cb51"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb51-1" title="1"><span class="ot">{-# LANGUAGE KindSignatures, DataKinds #-}</span></a>
-<a class="sourceLine" id="cb51-2" title="2"></a>
-<a class="sourceLine" id="cb51-3" title="3"><span class="kw">import</span> <span class="dt">GHC.TypeLits</span> (<span class="dt">Symbol</span>) <span class="co">-- strings promoted to types</span></a>
-<a class="sourceLine" id="cb51-4" title="4"><span class="kw">import</span> <span class="dt">Data.Ratio</span> ((%))</a>
-<a class="sourceLine" id="cb51-5" title="5"></a>
-<a class="sourceLine" id="cb51-6" title="6"><span class="kw">newtype</span> <span class="dt">Money</span> (<span class="ot">currency ::</span> <span class="dt">Symbol</span>) <span class="ot">=</span> <span class="dt">Money</span> <span class="dt">Rational</span> <span class="kw">deriving</span> <span class="dt">Show</span></a>
-<a class="sourceLine" id="cb51-7" title="7"></a>
-<a class="sourceLine" id="cb51-8" title="8"><span class="ot">fivePence ::</span> <span class="dt">Money</span> <span class="st">&quot;GBP&quot;</span></a>
-<a class="sourceLine" id="cb51-9" title="9">fivePence <span class="ot">=</span> <span class="dt">Money</span> (<span class="dv">5</span> <span class="op">%</span> <span class="dv">100</span>)</a>
-<a class="sourceLine" id="cb51-10" title="10"></a>
-<a class="sourceLine" id="cb51-11" title="11"><span class="ot">twoEuros ::</span> <span class="dt">Money</span> <span class="st">&quot;EUR&quot;</span></a>
-<a class="sourceLine" id="cb51-12" title="12">twoEuros <span class="ot">=</span> <span class="dt">Money</span> <span class="dv">2</span></a>
-<a class="sourceLine" id="cb51-13" title="13"></a>
-<a class="sourceLine" id="cb51-14" title="14"><span class="ot">add ::</span> <span class="dt">Money</span> c <span class="ot">-&gt;</span> <span class="dt">Money</span> c <span class="ot">-&gt;</span> <span class="dt">Money</span> c</a>
-<a class="sourceLine" id="cb51-15" title="15">add (<span class="dt">Money</span> x) (<span class="dt">Money</span> y) <span class="ot">=</span> <span class="dt">Money</span> (x <span class="op">+</span> y)</a>
-<a class="sourceLine" id="cb51-16" title="16"></a>
-<a class="sourceLine" id="cb51-17" title="17"><span class="co">-- &gt;&gt;&gt; add fivePence fivePence</span></a>
-<a class="sourceLine" id="cb51-18" title="18"><span class="co">-- Money (1 % 10)</span></a>
-<a class="sourceLine" id="cb51-19" title="19"></a>
-<a class="sourceLine" id="cb51-20" title="20"><span class="co">-- &gt;&gt;&gt; add fivePence twoEuros</span></a>
-<a class="sourceLine" id="cb51-21" title="21"><span class="co">-- &lt;interactive&gt;:18:15: error:</span></a>
-<a class="sourceLine" id="cb51-22" title="22"><span class="co">--    • Couldn&#39;t match type ‘&quot;EUR&quot;’ with ‘&quot;GBP&quot;’</span></a>
-<a class="sourceLine" id="cb51-23" title="23"><span class="co">--      Expected type: Money &quot;GBP&quot;</span></a>
-<a class="sourceLine" id="cb51-24" title="24"><span class="co">--        Actual type: Money &quot;EUR&quot;</span></a></code></pre></div>
-<h1 id="type-level-numbers-kind-level-tuples">Type level numbers, kind level tuples</h1>
 <div class="sourceCode" id="cb52"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb52-1" title="1"><span class="ot">{-# LANGUAGE KindSignatures, DataKinds #-}</span></a>
 <a class="sourceLine" id="cb52-2" title="2"></a>
-<a class="sourceLine" id="cb52-3" title="3"><span class="kw">import</span> <span class="dt">GHC.TypeLits</span> (<span class="dt">Symbol</span>, <span class="dt">Nat</span>)</a>
-<a class="sourceLine" id="cb52-4" title="4"></a>
-<a class="sourceLine" id="cb52-5" title="5"><span class="kw">newtype</span> <span class="dt">Discrete</span> (<span class="ot">currency ::</span> <span class="dt">Symbol</span>) (<span class="ot">scale ::</span> (<span class="dt">Nat</span>, <span class="dt">Nat</span>))</a>
-<a class="sourceLine" id="cb52-6" title="6">  <span class="ot">=</span> <span class="dt">Discrete</span> <span class="dt">Integer</span></a>
+<a class="sourceLine" id="cb52-3" title="3"><span class="kw">import</span> <span class="dt">GHC.TypeLits</span> (<span class="dt">Symbol</span>) <span class="co">-- strings promoted to types</span></a>
+<a class="sourceLine" id="cb52-4" title="4"><span class="kw">import</span> <span class="dt">Data.Ratio</span> ((%))</a>
+<a class="sourceLine" id="cb52-5" title="5"></a>
+<a class="sourceLine" id="cb52-6" title="6"><span class="kw">newtype</span> <span class="dt">Money</span> (<span class="ot">currency ::</span> <span class="dt">Symbol</span>) <span class="ot">=</span> <span class="dt">Money</span> <span class="dt">Rational</span> <span class="kw">deriving</span> <span class="dt">Show</span></a>
 <a class="sourceLine" id="cb52-7" title="7"></a>
-<a class="sourceLine" id="cb52-8" title="8"><span class="ot">oneDollar ::</span> <span class="dt">Discrete</span> <span class="st">&quot;USD&quot;</span> &#39;(<span class="dv">1</span>, <span class="dv">1</span>)</a>
-<a class="sourceLine" id="cb52-9" title="9">oneDollar <span class="ot">=</span> <span class="dt">Discrete</span> <span class="dv">1</span></a>
+<a class="sourceLine" id="cb52-8" title="8"><span class="ot">fivePence ::</span> <span class="dt">Money</span> <span class="st">&quot;GBP&quot;</span></a>
+<a class="sourceLine" id="cb52-9" title="9">fivePence <span class="ot">=</span> <span class="dt">Money</span> (<span class="dv">5</span> <span class="op">%</span> <span class="dv">100</span>)</a>
 <a class="sourceLine" id="cb52-10" title="10"></a>
-<a class="sourceLine" id="cb52-11" title="11"><span class="ot">oneDollarThirtyCents ::</span> <span class="dt">Discrete</span> <span class="st">&quot;USD&quot;</span> &#39;(<span class="dv">100</span>, <span class="dv">1</span>)</a>
-<a class="sourceLine" id="cb52-12" title="12">oneDollarThirtyCents <span class="ot">=</span> <span class="dt">Discrete</span> <span class="dv">130</span></a></code></pre></div>
+<a class="sourceLine" id="cb52-11" title="11"><span class="ot">twoEuros ::</span> <span class="dt">Money</span> <span class="st">&quot;EUR&quot;</span></a>
+<a class="sourceLine" id="cb52-12" title="12">twoEuros <span class="ot">=</span> <span class="dt">Money</span> <span class="dv">2</span></a>
+<a class="sourceLine" id="cb52-13" title="13"></a>
+<a class="sourceLine" id="cb52-14" title="14"><span class="ot">add ::</span> <span class="dt">Money</span> c <span class="ot">-&gt;</span> <span class="dt">Money</span> c <span class="ot">-&gt;</span> <span class="dt">Money</span> c</a>
+<a class="sourceLine" id="cb52-15" title="15">add (<span class="dt">Money</span> x) (<span class="dt">Money</span> y) <span class="ot">=</span> <span class="dt">Money</span> (x <span class="op">+</span> y)</a>
+<a class="sourceLine" id="cb52-16" title="16"></a>
+<a class="sourceLine" id="cb52-17" title="17"><span class="co">-- &gt;&gt;&gt; add fivePence fivePence</span></a>
+<a class="sourceLine" id="cb52-18" title="18"><span class="co">-- Money (1 % 10)</span></a>
+<a class="sourceLine" id="cb52-19" title="19"></a>
+<a class="sourceLine" id="cb52-20" title="20"><span class="co">-- &gt;&gt;&gt; add fivePence twoEuros</span></a>
+<a class="sourceLine" id="cb52-21" title="21"><span class="co">-- &lt;interactive&gt;:18:15: error:</span></a>
+<a class="sourceLine" id="cb52-22" title="22"><span class="co">--    • Couldn&#39;t match type ‘&quot;EUR&quot;’ with ‘&quot;GBP&quot;’</span></a>
+<a class="sourceLine" id="cb52-23" title="23"><span class="co">--      Expected type: Money &quot;GBP&quot;</span></a>
+<a class="sourceLine" id="cb52-24" title="24"><span class="co">--        Actual type: Money &quot;EUR&quot;</span></a></code></pre></div>
+<h1 id="type-level-numbers-kind-level-tuples">Type level numbers, kind level tuples</h1>
+<div class="sourceCode" id="cb53"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb53-1" title="1"><span class="ot">{-# LANGUAGE KindSignatures, DataKinds #-}</span></a>
+<a class="sourceLine" id="cb53-2" title="2"></a>
+<a class="sourceLine" id="cb53-3" title="3"><span class="kw">import</span> <span class="dt">GHC.TypeLits</span> (<span class="dt">Symbol</span>, <span class="dt">Nat</span>)</a>
+<a class="sourceLine" id="cb53-4" title="4"></a>
+<a class="sourceLine" id="cb53-5" title="5"><span class="kw">newtype</span> <span class="dt">Discrete</span> (<span class="ot">currency ::</span> <span class="dt">Symbol</span>) (<span class="ot">scale ::</span> (<span class="dt">Nat</span>, <span class="dt">Nat</span>))</a>
+<a class="sourceLine" id="cb53-6" title="6">  <span class="ot">=</span> <span class="dt">Discrete</span> <span class="dt">Integer</span></a>
+<a class="sourceLine" id="cb53-7" title="7"></a>
+<a class="sourceLine" id="cb53-8" title="8"><span class="ot">oneDollar ::</span> <span class="dt">Discrete</span> <span class="st">&quot;USD&quot;</span> &#39;(<span class="dv">1</span>, <span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb53-9" title="9">oneDollar <span class="ot">=</span> <span class="dt">Discrete</span> <span class="dv">1</span></a>
+<a class="sourceLine" id="cb53-10" title="10"></a>
+<a class="sourceLine" id="cb53-11" title="11"><span class="ot">oneDollarThirtyCents ::</span> <span class="dt">Discrete</span> <span class="st">&quot;USD&quot;</span> &#39;(<span class="dv">100</span>, <span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb53-12" title="12">oneDollarThirtyCents <span class="ot">=</span> <span class="dt">Discrete</span> <span class="dv">130</span></a></code></pre></div>
 <p>In <code>scale :: (Nat, Nat)</code>, <code>(,)</code> is the tuple type promoted to a kind via DataKinds.</p>
 <p>In <code>'(100, 1), '(,)</code> is the tuple data constructor promoted to a type constructor.</p>
 <h1 id="guest-lecture">Guest Lecture</h1>

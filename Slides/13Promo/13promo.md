@@ -371,15 +371,25 @@ vchop1 _ _ = undefined
 
 Can we at least write a test for it?
 
+```
+-- >>> vchop1 (1 :> 2 :> V0)
+-- ???
+```
+
+# vchop2
 We need to count to `m`. Here's an ugly solution:
 
 ``` {.haskell}
 -- | Chop a vector in two, using first argument as a measure
--- >>> vchop2 (Vcons undefined V0) (Vcons 1 (Vcons 2 V0))
--- (Vcons 1 V0,Vcons 2 V0)
+-- >>> vchop2 (undefined :> V0) (1 :> 2 :> V0)
+-- (1 :> V0,2 :> V0)
+
+-- NB if we had `vreplicate`, we might write
+-- vchop2 (vreplicate (S Z) undefined) (1 :> 2 :> V0)
+
 vchop2 :: Vec m x -> Vec (m :+ n) a -> (Vec m a, Vec n a)
 vchop2 V0 xs = (V0, xs)
-vchop2 (Vcons _ m) (Vcons x xs) = (Vcons x ys, zs) where
+vchop2 (_:>m) (x:>xs) = (x:>ys, zs) where
   (ys, zs) = vchop2 m xs
 ```
 
