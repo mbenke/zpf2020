@@ -320,16 +320,18 @@ type family (n :: Nat) :* (m :: Nat) :: Nat
 
 # Indexing
 
+You have probably seen some variant of `Fin` in Coq/Idris
+
 ``` {.haskell}
 -- atIndex :: Vec n a -> (m < n) -> a
 
 data Fin (n::Nat) where
-    FinZ :: Fin (S n) -- zero is less than any successor
+    FinZ :: Fin (S n)          -- zero is less than any successor
     FinS :: Fin n -> Fin (S n) -- n is less than (n+1)
 
 atIndex :: Vec n a -> Fin n -> a
-atIndex (Vcons x xs) FinZ = x
-atIndex (Vcons x xs) (FinS k) = atIndex xs k
+atIndex (x:>_) FinZ = x
+atIndex (_:>xs) (FinS k) = atIndex xs k
 
 -- Exercise - why not:
 -- atIndex :: Vec (S n) a -> ... ?
