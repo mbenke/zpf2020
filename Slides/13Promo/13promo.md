@@ -396,11 +396,12 @@ vchop2 (_:>m) (x:>xs) = (x:>ys, zs) where
 # Singleton
 Usin a vector is an overkill, we need just its length.
 
-But `Nat` is not precise enough, we have `Z :: Nat`, but woud like `Zero :: SNat Z`
+But `Nat` is not precise enough; it's like `[a]` - no size checking.
 
 Idea: create a representant of every element of kind Nat
 
 ``` {.haskell}
+-- SNat n ~~ Vec n ()
 data SNat (n::Nat) where
   SZ :: SNat Z
   SS :: SNat n -> SNat (S n)

@@ -343,16 +343,17 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
 <a class="sourceLine" id="cb30-11" title="11">  (ys, zs) <span class="ot">=</span> vchop2 m xs</a></code></pre></div>
 <h1 id="singleton">Singleton</h1>
 <p>Usin a vector is an overkill, we need just its length.</p>
-<p>But <code>Nat</code> is not precise enough, we have <code>Z :: Nat</code>, but woud like <code>Zero :: SNat Z</code></p>
+<p>But <code>Nat</code> is not precise enough; it’s like <code>[a]</code> - no size checking.</p>
 <p>Idea: create a representant of every element of kind Nat</p>
-<div class="sourceCode" id="cb31"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb31-1" title="1"><span class="kw">data</span> <span class="dt">SNat</span> (<span class="ot">n::</span><span class="dt">Nat</span>) <span class="kw">where</span></a>
-<a class="sourceLine" id="cb31-2" title="2">  <span class="dt">SZ</span><span class="ot"> ::</span> <span class="dt">SNat</span> <span class="dt">Z</span></a>
-<a class="sourceLine" id="cb31-3" title="3">  <span class="dt">SS</span><span class="ot"> ::</span> <span class="dt">SNat</span> n <span class="ot">-&gt;</span> <span class="dt">SNat</span> (<span class="dt">S</span> n)</a>
-<a class="sourceLine" id="cb31-4" title="4"><span class="kw">deriving</span> <span class="kw">instance</span> <span class="dt">Show</span>(<span class="dt">SNat</span> n)</a>
-<a class="sourceLine" id="cb31-5" title="5"></a>
-<a class="sourceLine" id="cb31-6" title="6"><span class="ot">add ::</span> (<span class="dt">SNat</span> m) <span class="ot">-&gt;</span> (<span class="dt">SNat</span> n) <span class="ot">-&gt;</span> <span class="dt">SNat</span>(m <span class="op">:+</span> n)</a>
-<a class="sourceLine" id="cb31-7" title="7">add <span class="dt">SZ</span> n <span class="ot">=</span> n</a>
-<a class="sourceLine" id="cb31-8" title="8">add (<span class="dt">SS</span> m) n <span class="ot">=</span> <span class="dt">SS</span> (add m n)</a></code></pre></div>
+<div class="sourceCode" id="cb31"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb31-1" title="1"><span class="co">-- SNat n  ~~ Vec n ()</span></a>
+<a class="sourceLine" id="cb31-2" title="2"><span class="kw">data</span> <span class="dt">SNat</span> (<span class="ot">n::</span><span class="dt">Nat</span>) <span class="kw">where</span></a>
+<a class="sourceLine" id="cb31-3" title="3">  <span class="dt">SZ</span><span class="ot"> ::</span> <span class="dt">SNat</span> <span class="dt">Z</span></a>
+<a class="sourceLine" id="cb31-4" title="4">  <span class="dt">SS</span><span class="ot"> ::</span> <span class="dt">SNat</span> n <span class="ot">-&gt;</span> <span class="dt">SNat</span> (<span class="dt">S</span> n)</a>
+<a class="sourceLine" id="cb31-5" title="5"><span class="kw">deriving</span> <span class="kw">instance</span> <span class="dt">Show</span>(<span class="dt">SNat</span> n)</a>
+<a class="sourceLine" id="cb31-6" title="6"></a>
+<a class="sourceLine" id="cb31-7" title="7"><span class="ot">add ::</span> (<span class="dt">SNat</span> m) <span class="ot">-&gt;</span> (<span class="dt">SNat</span> n) <span class="ot">-&gt;</span> <span class="dt">SNat</span>(m <span class="op">:+</span> n)</a>
+<a class="sourceLine" id="cb31-8" title="8">add <span class="dt">SZ</span> n <span class="ot">=</span> n</a>
+<a class="sourceLine" id="cb31-9" title="9">add (<span class="dt">SS</span> m) n <span class="ot">=</span> <span class="dt">SS</span> (add m n)</a></code></pre></div>
 <p><strong>Exercise:</strong> define multiplication</p>
 <div class="sourceCode" id="cb32"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb32-1" title="1"><span class="ot">mul ::</span> (<span class="dt">SNat</span> m) <span class="ot">-&gt;</span> (<span class="dt">SNat</span> n) <span class="ot">-&gt;</span> <span class="dt">SNat</span>(m <span class="op">:*</span> n)</a></code></pre></div>
 <h1 id="comparisons-and-another-way-of-vector-indexing">Comparisons and another way of vector indexing</h1>
