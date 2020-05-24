@@ -95,7 +95,8 @@ atIndex (_:>xs) (FinS k) = atIndex xs k
 -- Want
 vreplicate1 :: Nat -> a -> Vec n a
 vreplicate1 = undefined
--- vreplicate1 _ = V0 -- doesn't work
+-- vreplicate Z _ = V0   --  Expected type: Vec n a
+                         --  Actual type:   Vec 'Z a
 
 -- this does not work either
 -- vreplicate2 :: (n::Nat) -> a -> Vec n a

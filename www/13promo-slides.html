@@ -350,11 +350,13 @@ Marcin Benke
 <h1>Replicate</h1>
 <p>Let’s try to define a vector counterpart of <code>replicate :: Int -&gt; a -&gt; [a]</code></p>
 <div class="sourceCode" id="cb26"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb26-1" title="1"><span class="ot">vreplicate ::</span> <span class="dt">Nat</span> <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">Vec</span> n a</a>
-<a class="sourceLine" id="cb26-2" title="2">vreplicate <span class="dt">Z</span> _ <span class="ot">=</span> <span class="dt">V0</span> <span class="co">-- fail on oh, so many levels</span></a></code></pre></div>
+<a class="sourceLine" id="cb26-2" title="2">vreplicate <span class="dt">Z</span> _ <span class="ot">=</span> <span class="dt">V0</span>   <span class="co">--  Expected type: Vec n a</span></a>
+<a class="sourceLine" id="cb26-3" title="3">                      <span class="co">--  Actual type:   Vec &#39;Z a</span></a></code></pre></div>
 <p>more precisely, we would like</p>
 <div class="sourceCode" id="cb27"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb27-1" title="1"><span class="ot">vreplicate2 ::</span> (<span class="ot">n::</span><span class="dt">Nat</span>) <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">Vec</span> n a</a></code></pre></div>
 <p>…but <code>n::Nat</code> has no inhabitants</p>
 <p><em>Exercise:</em> try your own ideas for <code>vreplicate</code></p>
+<p>Before we implement <code>vreplicate</code> let us look at some other functions.</p>
 </div>
 <div id="vchop" class="slide section level1">
 <h1>vchop</h1>

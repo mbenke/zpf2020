@@ -343,7 +343,8 @@ Let's try to define a vector counterpart of `replicate :: Int -> a -> [a]`
 
 ``` {.haskell}
 vreplicate :: Nat -> a -> Vec n a
-vreplicate Z _ = V0 -- fail on oh, so many levels
+vreplicate Z _ = V0   --  Expected type: Vec n a
+                      --  Actual type:   Vec 'Z a
 ```
 
 more precisely, we would like
@@ -355,6 +356,8 @@ vreplicate2 :: (n::Nat) -> a -> Vec n a
 ...but `n::Nat` has no inhabitants
 
 *Exercise:* try your own ideas for `vreplicate`
+
+Before we implement `vreplicate` let us look at some other functions.
 
 # vchop
 
