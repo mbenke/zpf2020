@@ -345,7 +345,7 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
 <p>Usin a vector is an overkill, we need just its length.</p>
 <p>But <code>Nat</code> is not precise enough; it’s like <code>[a]</code> - no size checking.</p>
 <p>Idea: create a representant of every element of kind Nat</p>
-<div class="sourceCode" id="cb31"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb31-1" title="1"><span class="co">-- SNat n  ~~ Vec n ()</span></a>
+<div class="sourceCode" id="cb31"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb31-1" title="1"><span class="co">-- SNat n ~~ Vec n ()</span></a>
 <a class="sourceLine" id="cb31-2" title="2"><span class="kw">data</span> <span class="dt">SNat</span> (<span class="ot">n::</span><span class="dt">Nat</span>) <span class="kw">where</span></a>
 <a class="sourceLine" id="cb31-3" title="3">  <span class="dt">SZ</span><span class="ot"> ::</span> <span class="dt">SNat</span> <span class="dt">Z</span></a>
 <a class="sourceLine" id="cb31-4" title="4">  <span class="dt">SS</span><span class="ot"> ::</span> <span class="dt">SNat</span> n <span class="ot">-&gt;</span> <span class="dt">SNat</span> (<span class="dt">S</span> n)</a>
@@ -376,6 +376,7 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
         arising from a use of ‘nth’
     • In the expression: nth SZ V0</code></pre>
 <h1 id="vchop3">vchop3</h1>
+<p>With <code>SNat</code> we can implement <code>vchop</code> properly:</p>
 <div class="sourceCode" id="cb35"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb35-1" title="1"><span class="co">-- | chop a vector in two parts</span></a>
 <a class="sourceLine" id="cb35-2" title="2"><span class="co">-- &gt;&gt;&gt; vchop (SS SZ) (Vcons 1 (Vcons 2 V0))</span></a>
 <a class="sourceLine" id="cb35-3" title="3"><span class="co">-- (Vcons 1 V0,Vcons 2 V0)</span></a>
@@ -385,14 +386,15 @@ code span.wa { color: #008000; font-weight: bold; } /* Warning */
 <a class="sourceLine" id="cb35-7" title="7">vchop3 (<span class="dt">SS</span> m) (<span class="dt">Vcons</span> x xs) <span class="ot">=</span> (<span class="dt">Vcons</span> x ys, zs) <span class="kw">where</span></a>
 <a class="sourceLine" id="cb35-8" title="8">  (ys,zs) <span class="ot">=</span> vchop3 m xs</a></code></pre></div>
 <h1 id="vreplicate">vreplicate</h1>
+<p>Also <code>vreplicate</code> becomes easy:</p>
 <div class="sourceCode" id="cb36"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb36-1" title="1"><span class="co">-- | `vreplicate n a` is a vector of n copies of a</span></a>
 <a class="sourceLine" id="cb36-2" title="2"><span class="co">-- &gt;&gt;&gt; vreplicate (SS SZ) 1</span></a>
-<a class="sourceLine" id="cb36-3" title="3"><span class="co">-- Vcons 1 V0</span></a>
+<a class="sourceLine" id="cb36-3" title="3"><span class="co">-- 1 :&gt; V0</span></a>
 <a class="sourceLine" id="cb36-4" title="4"><span class="co">-- &gt;&gt;&gt; vreplicate (SS (SS SZ)) 1</span></a>
-<a class="sourceLine" id="cb36-5" title="5"><span class="co">-- Vcons 1 (Vcons 1 V0)</span></a>
+<a class="sourceLine" id="cb36-5" title="5"><span class="co">-- 1 :&gt; (1 :&gt; V0)</span></a>
 <a class="sourceLine" id="cb36-6" title="6"><span class="ot">vreplicate ::</span> <span class="dt">SNat</span> n <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">Vec</span> n a</a>
 <a class="sourceLine" id="cb36-7" title="7">vreplicate <span class="dt">SZ</span> _ <span class="ot">=</span> <span class="dt">V0</span></a>
-<a class="sourceLine" id="cb36-8" title="8">vreplicate (<span class="dt">SS</span> n) x <span class="ot">=</span> <span class="dt">Vcons</span> x (vreplicate n x)</a></code></pre></div>
+<a class="sourceLine" id="cb36-8" title="8">vreplicate (<span class="dt">SS</span> n) x <span class="ot">=</span> x <span class="op">:&gt;</span> (vreplicate n x)</a></code></pre></div>
 <p><strong>Exercise:</strong> define</p>
 <div class="sourceCode" id="cb37"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb37-1" title="1"><span class="ot">vcycle ::</span> <span class="dt">SNat</span> n <span class="ot">-&gt;</span> <span class="dt">Vec</span> m a <span class="ot">-&gt;</span> <span class="dt">Vec</span> (n<span class="op">:*</span>m) a</a></code></pre></div>
 <h1 id="vtake">vtake</h1>

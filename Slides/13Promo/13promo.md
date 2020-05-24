@@ -448,6 +448,7 @@ With the constraint, we get:
 
 # vchop3
 
+With `SNat` we can implement `vchop` properly:
 ``` {.haskell}
 -- | chop a vector in two parts
 -- >>> vchop (SS SZ) (Vcons 1 (Vcons 2 V0))
@@ -461,15 +462,17 @@ vchop3 (SS m) (Vcons x xs) = (Vcons x ys, zs) where
 
 # vreplicate
 
+Also `vreplicate` becomes easy:
+
 ``` {.haskell}
 -- | `vreplicate n a` is a vector of n copies of a
 -- >>> vreplicate (SS SZ) 1
--- Vcons 1 V0
+-- 1 :> V0
 -- >>> vreplicate (SS (SS SZ)) 1
--- Vcons 1 (Vcons 1 V0)
+-- 1 :> (1 :> V0)
 vreplicate :: SNat n -> a -> Vec n a
 vreplicate SZ _ = V0
-vreplicate (SS n) x = Vcons x (vreplicate n x)
+vreplicate (SS n) x = x :> (vreplicate n x)
 ```
 
 **Exercise:** define
