@@ -615,7 +615,7 @@ Prelude> read @Double "42"
 ``` haskell
 -- vtake4 requires:
 -- {-# LANGUAGE ScopedTypeVariables #-}
--- {-# LANGUAGE TypeApplications #-} -- GHC>=8.0
+-- {-# LANGUAGE TypeApplications #-}
 
 -- >>> let v = 1 :> (1 :> (1 :> V0)); two = SS(SS SZ) in vtake4 two v
 -- 1 :> (1 :> V0)
@@ -797,11 +797,3 @@ oneDollarThirtyCents = Discrete 130
 In `scale :: (Nat, Nat)`, `(,)` is the tuple type promoted to a kind via  DataKinds.
 
 In `'(100, 1), '(,)` is the tuple data constructor promoted to a type constructor.
-
-# Guest Lecture
-
-### Jun 11, 8.30 room 3180
-
-### Ruud Koot from Standard Chartered
-
-will talk about Haskell in banking and finance

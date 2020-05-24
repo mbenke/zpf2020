@@ -475,7 +475,7 @@ Prelude&gt; read @Double &quot;42&quot;
 42.0</code></pre>
 <div class="sourceCode" id="cb49"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb49-1" title="1"><span class="co">-- vtake4 requires:</span></a>
 <a class="sourceLine" id="cb49-2" title="2"><span class="co">-- {-# LANGUAGE ScopedTypeVariables #-}</span></a>
-<a class="sourceLine" id="cb49-3" title="3"><span class="co">-- {-# LANGUAGE TypeApplications #-} -- GHC&gt;=8.0</span></a>
+<a class="sourceLine" id="cb49-3" title="3"><span class="co">-- {-# LANGUAGE TypeApplications #-}</span></a>
 <a class="sourceLine" id="cb49-4" title="4"></a>
 <a class="sourceLine" id="cb49-5" title="5"><span class="co">-- &gt;&gt;&gt; let v = 1 :&gt; (1 :&gt; (1 :&gt; V0)); two = SS(SS SZ) in vtake4 two v</span></a>
 <a class="sourceLine" id="cb49-6" title="6"><span class="co">-- 1 :&gt; (1 :&gt; V0)</span></a>
@@ -618,9 +618,5 @@ Prelude&gt; read @Double &quot;42&quot;
 <a class="sourceLine" id="cb57-12" title="12">oneDollarThirtyCents <span class="ot">=</span> <span class="dt">Discrete</span> <span class="dv">130</span></a></code></pre></div>
 <p>In <code>scale :: (Nat, Nat)</code>, <code>(,)</code> is the tuple type promoted to a kind via DataKinds.</p>
 <p>In <code>'(100, 1), '(,)</code> is the tuple data constructor promoted to a type constructor.</p>
-<h1 id="guest-lecture">Guest Lecture</h1>
-<h3 id="jun-11-8.30-room-3180">Jun 11, 8.30 room 3180</h3>
-<h3 id="ruud-koot-from-standard-chartered">Ruud Koot from Standard Chartered</h3>
-<p>will talk about Haskell in banking and finance</p>
 </body>
 </html>
