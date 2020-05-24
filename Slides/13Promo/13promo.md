@@ -202,13 +202,14 @@ vhead :: Vec (Succ n) a -> a
 vhead (x :> xs) = x
 ```
 
+Let us see how far we can go with dependent vectors in Haskell
+
 # Promotion
 
 If we have the `Nat` datatype, types for zero and successor can be automatically generated:
 
 ``` {.haskell}
 {-# LANGUAGE GADTs, DataKinds, KindSignatures #-}
-
 data Nat :: * where
   Z :: Nat
   S :: Nat -> Nat
@@ -240,9 +241,12 @@ data Nat :: * where
   S :: Nat -> Nat
 
 -- Nat is a kind, and so is Nat -> * -> *
+infixr 6 :>
 data Vec :: Nat -> * -> * where
-  Vnil :: Vec 'Z a
-  Vcons :: a -> Vec n a -> Vec ('S n) a
+  V0   :: Vec 'Z a
+  (:>) :: a -> Vec n a -> Vec ('S n) a
+
+deriving instance (Show a) => Show (Vec n a)
 
 vhead :: Vec (S n) a -> a
 vhead (x:>_) = x
@@ -263,7 +267,7 @@ foo0 :: HList '[]
 foo0 = HNil
 
 foo1 :: HList '[Int]
-foo1 = HCons (3::Int) HNil
+foo1 = HCons 3 HNil
 
 foo2 :: HList [Int, Bool]
 foo2 = undefined  -- (easy) exercise
@@ -273,14 +277,13 @@ foo2 = undefined  -- (easy) exercise
 # Vector concatenation
 We have seen that addition can be defined with classes:
 ``` haskell
-class (Nat a, Nat b) => Add a b c | a b -> c where
-  add :: a -> b -> c
-  add = undefined
-instance Nat b =>     Add  Zero    b  b
-instance Add a b c => Add (Succ a) b (Succ c)
+class Add (a::Nat) (b::Nat) (c::Nat)  where
 
-vappend :: (Nat m, Nat n, Add m n s) => Vec m a -> Vec n a -> Vec s a
-vappend Vnil ys = ys
+instance Add  Z    b  b
+instance Add a b c => Add (S a) b (S c)
+
+vappend :: (Add m n s) => Vec m a -> Vec n a -> Vec s a
+vappend V0 ys = ys
 ```
 
 alas...
@@ -288,7 +291,7 @@ alas...
 ```
 error: …
     • Could not deduce: n ~ s
-      from the context: m ~ Zero
+      from the context: m ~ 'Z
 ```
 
 The constraint checker cannot infer `s = n` from `m = 0`
@@ -303,8 +306,8 @@ type instance Z :+ m = m
 type instance (S n) :+ m = S (n :+ m)
 
 vapp :: Vec m a -> Vec n a -> Vec (m :+ n) a
-vapp Vnil ys = ys
-vapp (Vcons x xs) ys = Vcons x (vapp xs ys)
+vapp V0 ys = ys
+vapp (x:>xs) ys = x:>(vapp xs ys)
 ```
 
 Now `Z :+ m` can be reduced to `m` (at compile time)
@@ -338,7 +341,7 @@ Let's try to define a vector counterpart of `replicate :: Int -> a -> [a]`
 
 ``` {.haskell}
 vreplicate :: Nat -> a -> Vec n a
-vreplicate Z _ = Vnil -- fail on oh, so many levels
+vreplicate Z _ = V0 -- fail on oh, so many levels
 ```
 
 more precisely, we would like
@@ -367,10 +370,10 @@ We need to count to `m`. Here's an ugly solution:
 
 ``` {.haskell}
 -- | Chop a vector in two, using first argument as a measure
--- >>> vchop2 (Vcons undefined Vnil) (Vcons 1 (Vcons 2 Vnil))
--- (Vcons 1 Vnil,Vcons 2 Vnil)
+-- >>> vchop2 (Vcons undefined V0) (Vcons 1 (Vcons 2 V0))
+-- (Vcons 1 V0,Vcons 2 V0)
 vchop2 :: Vec m x -> Vec (m :+ n) a -> (Vec m a, Vec n a)
-vchop2 Vnil xs = (Vnil, xs)
+vchop2 V0 xs = (V0, xs)
 vchop2 (Vcons _ m) (Vcons x xs) = (Vcons x ys, zs) where
   (ys, zs) = vchop2 m xs
 ```
@@ -431,11 +434,11 @@ With the constraint, we get:
 
 ``` {.haskell}
 -- | chop a vector in two parts
--- >>> vchop (SS SZ) (Vcons 1 (Vcons 2 Vnil))
--- (Vcons 1 Vnil,Vcons 2 Vnil)
+-- >>> vchop (SS SZ) (Vcons 1 (Vcons 2 V0))
+-- (Vcons 1 V0,Vcons 2 V0)
 vchop = vchop3
 vchop3 :: SNat m -> Vec(m:+n) a -> (Vec m a, Vec n a)
-vchop3 SZ xs = (Vnil, xs)
+vchop3 SZ xs = (V0, xs)
 vchop3 (SS m) (Vcons x xs) = (Vcons x ys, zs) where
   (ys,zs) = vchop3 m xs
 ```
@@ -445,11 +448,11 @@ vchop3 (SS m) (Vcons x xs) = (Vcons x ys, zs) where
 ``` {.haskell}
 -- | `vreplicate n a` is a vector of n copies of a
 -- >>> vreplicate (SS SZ) 1
--- Vcons 1 Vnil
+-- Vcons 1 V0
 -- >>> vreplicate (SS (SS SZ)) 1
--- Vcons 1 (Vcons 1 Vnil)
+-- Vcons 1 (Vcons 1 V0)
 vreplicate :: SNat n -> a -> Vec n a
-vreplicate SZ _ = Vnil
+vreplicate SZ _ = V0
 vreplicate (SS n) x = Vcons x (vreplicate n x)
 ```
 
