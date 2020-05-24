@@ -803,6 +803,8 @@ naiverev (x:xs) = naiverev xs ++ [x]
 Challenge: try to eliminate `size` from `accrev` by using proxies or type app
 (there is `Data.Vect`, stackoverflow and blogs but try to roll your own before you peek at other solutions).
 
+# Questions?
+
 # Type level literals
 
 ``` haskell
