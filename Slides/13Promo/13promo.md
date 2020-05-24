@@ -623,7 +623,7 @@ vtake4 :: forall n m a. SNat m -> Vec (m :+ n) a -> Vec m a
 vtake4 SZ _ = V0
 vtake4 (SS m) (x:>xs) = x :> vtake4 @n m xs
 ```
-# reverse
+# Reversing Vec
 
 Let's try a naive vector reverse:
 
@@ -641,6 +641,43 @@ As you might suspect, this does not work:
 ```
 
 Oh noes, we need to prove `n + 1 ~ S n`
+
+# vrev2
+
+We may work around this using a speccialized "append one" function:
+
+```haskell
+-- | vrev2
+-- >>> vrev2 (1:>2:>3:>V0)
+-- 3 :> (2 :> (1 :> V0))
+vrev2 :: Vec n a -> Vec n a
+vrev2 V0 = V0
+vrev2 (x:>xs) = vappOne (vrev2 xs) x
+
+vappOne :: Vec n a -> a -> Vec (S n) a
+vappOne V0 y = y :> V0
+vappOne (x:>xs) y = x :> vappOne xs y
+```
+
+but we would prefer to use append we have already written.
+
+# Better reverse with an accumulator
+
+```
+vrev3 :: Vec n a -> Vec n a
+vrev3 xs = vaccrev V0 xs
+
+vaccrev :: Vec n a -> Vec m a -> Vec (n :+ m) a
+vaccrev acc V0 = acc
+```
+
+Oh noes, now we fail even in the base case:
+
+```
+    • Could not deduce: (n :+ 'Z) ~ n
+```
+
+Now we need to prove `n + 0 ~ n` too.
 
 # Type Equality and proofs
 

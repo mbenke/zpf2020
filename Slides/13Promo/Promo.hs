@@ -210,3 +210,31 @@ vrev1 :: Vec n a -> Vec n a
 vrev1 V0 = V0
 -- vrev1 (x:>xs) = vapp (vrev1 xs) (x:>V0)
 vrev1 (x:>xs) = undefined
+
+-- | vrev2
+-- >>> vrev2 (1:>2:>3:>V0)
+-- 3 :> (2 :> (1 :> V0))
+vrev2 :: Vec n a -> Vec n a
+vrev2 V0 = V0
+vrev2 (x:>xs) = vappOne (vrev2 xs) x
+
+vappOne :: Vec n a -> a -> Vec (S n) a
+vappOne V0 y = y :> V0
+vappOne (x:>xs) y = x :> vappOne xs y
+
+
+rev :: [a] -> [a]
+rev [] = []
+rev xs = accrev [] xs
+
+accrev :: [a] -> [a] -> [a]
+accrev acc [] = acc
+accrev acc (h:t) = accrev (h:acc) t
+
+
+vrev3 :: Vec n a -> Vec n a
+vrev3 xs = vaccrev V0 xs
+
+vaccrev :: Vec n a -> Vec m a -> Vec (n :+ m) a
+--vaccrev acc V0 = acc
+vaccrev = undefined
