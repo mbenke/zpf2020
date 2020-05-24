@@ -496,18 +496,26 @@ vtake1 (SS m) (x:>xs) = x :> vtake1 m xs
 error: …
     • Could not deduce: (n1 :+ n0) ~ n2
       from the context: m ~ 'S n1
-        bound by a pattern with constructor:
-                   SS :: forall (n :: Nat). SNat n -> SNat ('S n),
-                 in an equation for ‘vtake1’
+      Expected type: Vec (n1 :+ n0) a
+        Actual type: Vec n2 a
+      In the second argument of ‘vtake1’, namely ‘xs’
+      In the second argument of ‘(:>)’, namely ‘vtake1 m xs’
+    • Relevant bindings include
+        xs :: Vec n2 a
+        m :: SNat n1
 ```
 
 The compiler cannot type the recursive case.
-The problem is whether `(m :+)` is injective.
 
 NB `AllowAmbiguousTypes` is needed if we want the compiler to even try
 to typecheck this.
 
 # Injectivity
+```
+    • Could not deduce: (n1 :+ n0) ~ n2
+      from the context: m ~ 'S n1
+```
+The problem is whether `(m :+)` is injective.
 
 `Maybe a ~ Maybe b => a ~ b`
 
@@ -525,9 +533,34 @@ we lack a "handle" on `n`; with real dependent types we would write
 (m : Nat) -> (n : Nat) -> Vec (m + n) x -> Vec m x
 ```
 
-# `Proxy`  - the handle
+# Using a concrete handle
 
-Let us try to build a handle:
+we lack a "handle" on `n`; with real dependent types we would write
+
+```
+(m : Nat) -> (n : Nat) -> Vec (m + n) x -> Vec m x
+```
+
+So let us try translating this using singletons:
+
+``` haskell
+vtake1' :: SNat m -> SNat n -> Vec (m :+ n) a -> Vec m a
+vtake1' SZ _  _ = V0
+vtake1' (SS m) n (x:>xs) = x :> vtake1' m n xs
+```
+
+This works, but we need to pass an additional parameter --- the length `n` of the vector remainder:
+
+```
+let v = 1 :> (1 :> (1 :> V0)); two = SS(SS SZ) in vtake1' two (SS SZ) v
+1 :> (1 :> V0)
+```
+
+But we do not need he value of `n`, only its type.
+
+# `Proxy` - an abstract handle
+
+Let us try to build an abstract handle:
 
 ``` haskell
 -- | Nat Proxy

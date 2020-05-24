@@ -165,6 +165,12 @@ vtake1  SZ    _ = V0
 -- vtake1 (SS m) (x:>xs) = x :> vtake1 m xs
 vtake1  _ _ = undefined
 
+-- | vtake1' - concrete handles
+-- >>> let v = 1 :> (1 :> (1 :> V0)); two = SS(SS SZ) in vtake1' two (SS SZ) v
+-- 1 :> (1 :> V0)
+vtake1' :: SNat m -> SNat n -> Vec (m :+ n) a -> Vec m a
+vtake1' SZ _  _ = V0
+vtake1' (SS m) n (x:>xs) = x :> vtake1' m n xs
 
 -- | Nat Proxy
 data NP :: Nat -> * where NP :: NP n
