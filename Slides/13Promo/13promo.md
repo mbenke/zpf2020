@@ -623,6 +623,24 @@ vtake4 :: forall n m a. SNat m -> Vec (m :+ n) a -> Vec m a
 vtake4 SZ _ = V0
 vtake4 (SS m) (x:>xs) = x :> vtake4 @n m xs
 ```
+# reverse
+
+Let's try a naive vector reverse:
+
+```
+rev1 :: Vec n a -> Vec n a
+vrev1 V0 = V0
+vrev1 (x:>xs) = vapp (vrev1 xs) (x:>V0)
+```
+
+As you might suspect, this does not work:
+
+```
+    • Could not deduce: (n1 :+ 'S 'Z) ~ 'S n1
+      from the context: n ~ 'S n1
+```
+
+Oh noes, we need to prove `n + 1 ~ S n`
 
 # Type Equality and proofs
 

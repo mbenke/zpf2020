@@ -201,3 +201,12 @@ vtake3 (SS m) n (x:>xs) = x :> vtake3 m n xs
 vtake4 :: forall n m a. SNat m -> Vec (m :+ n) a -> Vec m a
 vtake4 SZ _ = V0
 vtake4 (SS m) (x:>xs) = x :> vtake4 @n m xs
+
+naiverev :: [a] -> [a]
+naiverev [] = []
+naiverev (x:xs) = naiverev xs ++ [x]
+
+vrev1 :: Vec n a -> Vec n a
+vrev1 V0 = V0
+-- vrev1 (x:>xs) = vapp (vrev1 xs) (x:>V0)
+vrev1 (x:>xs) = undefined
