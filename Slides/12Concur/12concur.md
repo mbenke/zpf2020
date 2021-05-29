@@ -56,7 +56,7 @@ putMVar  :: MVar a -> a -> IO ()
 readMVar :: MVar a -> IO a  --  Atomic read
 
 tryTakeMVar :: MVar a -> IO (Maybe a) -- nonblocking
-tyyPutMVar  :: MVar a -> a -> IO Bool
+tryPutMVar  :: MVar a -> a -> IO Bool
 ~~~~
 
 `stdout` is guarded by an `MVar`, hence `A` and `B` in the previous example
